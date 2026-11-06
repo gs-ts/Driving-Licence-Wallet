@@ -1,15 +1,16 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+# Android Studio regenerates these on project open
+/.idea/
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+
+# Kotlin 2.x per-project data (https://kotlinlang.org/docs/whatsnew20.html)
+.kotlin/
+# HotSwan plugin runtime state (port/pid)
+/.hotswan/
