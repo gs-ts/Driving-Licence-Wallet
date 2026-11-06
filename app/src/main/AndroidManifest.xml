@@ -13,8 +13,8 @@
         android:theme="@style/Theme.DrivingLicenseWallet">
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleTop"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.DrivingLicenseWallet"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
