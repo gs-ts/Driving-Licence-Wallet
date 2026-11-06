@@ -59,7 +59,6 @@ detekt {
     source.setFrom("src/main/java", "src/main/kotlin")
     config.setFrom("$rootDir/config/detekt/detekt.yml")
     allRules = true
-    autoCorrect = true
     parallel = true
     buildUponDefaultConfig = true
 }

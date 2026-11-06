@@ -1,0 +1,48 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Matches gradle/gradle-daemon-jvm.properties (toolchainVersion=25).
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      # Caching + Gradle wrapper validation + job summary (replaces setup-java's `cache: gradle`).
+      - uses: gradle/actions/setup-gradle@v6
+
+      # `build` = assemble (debug + release/R8) + lint + unit tests + detekt.
+      # detektMain = the type-resolution detekt pass over production code (not part of `build`).
+      # assembleDebugAndroidTest = compile-checks androidTest sources (not part of `build`).
+      - name: Build, lint, test and analyze
+        run: ./gradlew build detektMain assembleDebugAndroidTest --continue
+
+      - name: Upload reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            app/build/reports/
+            app/build/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
