@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.detekt)
-    alias(libs.plugins.secrets.gradle.plugin)
 }
 
 android {
@@ -40,7 +39,6 @@ android {
     }
 
     buildFeatures {
-        buildConfig = true
         compose = true
         aidl = false
         resValues = false
