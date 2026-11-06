@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber", "PropertyName")
+
 package gts.drivinglicensewallet.ui.theme
 
 import androidx.compose.ui.graphics.Color

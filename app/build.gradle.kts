@@ -49,10 +49,19 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
+}
 
-    room { // https://developer.android.com/jetpack/androidx/releases/room#gradle-plugin
-        schemaDirectory("$projectDir/schemas")
-    }
+room { // https://developer.android.com/jetpack/androidx/releases/room#gradle-plugin
+    schemaDirectory("$projectDir/schemas")
+}
+
+detekt {
+    source.setFrom("src/main/java", "src/main/kotlin")
+    config.setFrom("$rootDir/config/detekt/detekt.yml")
+    allRules = true
+    autoCorrect = true
+    parallel = true
+    buildUponDefaultConfig = true
 }
 
 dependencies {
