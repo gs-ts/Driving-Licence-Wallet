@@ -564,7 +564,7 @@ style:
     maxChainedCalls: 5
   MaxLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 140
     excludePackageStatements: true
     excludeImportStatements: true
     excludeCommentStatements: false
@@ -705,8 +705,31 @@ style:
 
 ktlint:
   active: true
-  android: true
   autoCorrect: true
+  # Each of these ktlint rules reads its own line length (default 120). Keep them at 140, like style > MaxLineLength.
+  ArgumentListWrapping:
+    maxLineLength: 140
+  BinaryExpressionWrapping:
+    maxLineLength: 140
+  ContextReceiverListWrapping:
+    maxLineLength: 140
+  ContextReceiverMapping:
+    maxLineLength: 140
+  FunctionLiteral:
+    maxLineLength: 140
+  FunctionReturnTypeSpacing:
+    maxLineLength: 140
+  MaximumLineLength:
+    maxLineLength: 140
+    ignoreBackTickedIdentifier: false
+  ParameterListSpacing:
+    maxLineLength: 140
+  ParameterListWrapping:
+    maxLineLength: 140
+  ParameterWrapping:
+    maxLineLength: 140
+  PropertyWrapping:
+    maxLineLength: 140
   BlankLineBetweenWhenConditions:
     active: false
   FunctionExpressionBody:
@@ -733,14 +756,6 @@ ktlint:
     active: false
   WhenEntryBracing:
     active: false
-  standard:wrapping:
-    active: false
-  standard:filename:
-    active: true
-  standard:max-line-length:
-    active: true
-    maxLineLength: 140
-    ignoreBackTickedIdentifier: false
 
 Compose:
   ComposableAnnotationNaming:
