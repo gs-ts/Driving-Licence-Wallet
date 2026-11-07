@@ -9,13 +9,13 @@ plugins {
 }
 
 android {
-    namespace = "gts.drivinglicensewallet"
+    namespace = "gts.drivinglicencewallet"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "gts.drivinglicensewallet"
+        applicationId = "gts.drivinglicencewallet"
         minSdk = 29
         targetSdk = 37
         versionCode = 1

@@ -1,4 +1,4 @@
-# DrivingLicenseWallet
+# DrivingLicenceWallet
 
 ## Project Structure and project facts
 - **Navigation Pattern:** Navigation 3 only, no Navigation 2.

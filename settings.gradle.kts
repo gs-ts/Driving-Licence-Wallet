@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Driving License Wallet"
+rootProject.name = "Driving Licence Wallet"
 include(":app")
  

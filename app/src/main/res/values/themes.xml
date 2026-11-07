@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Window/launch theme only. The UI's Material 3 theme lives in ui/theme/Theme.kt (Compose). -->
-    <style name="Theme.DrivingLicenseWallet" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.DrivingLicenceWallet" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>
