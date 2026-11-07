@@ -1,5 +1,7 @@
 package gts.drivinglicencewallet.domain.workflow
 
+import gts.drivinglicencewallet.domain.applicant.ApplicantField
+
 /**
  * What happened to an application. Every [StatusChange] and [HistoryEntry] carries one.
  *
@@ -44,6 +46,60 @@ sealed interface WorkflowEvent {
     data class ProcessingAbandoned(val attempts: Int) : WorkflowEvent {
         init {
             require(value = attempts > 0) { "Processing can only give up after at least one attempt." }
+        }
+    }
+}
+
+/** Why the applicant's details failed data validation. */
+sealed interface DataProblem {
+
+    data class MissingField(val field: ApplicantField) : DataProblem
+
+    data object InvalidEmail : DataProblem
+
+    /** Younger than 18 on the day the application was processed. */
+    data object Under18 : DataProblem
+}
+
+/** Why the photo failed the photo check. */
+enum class PhotoProblem {
+
+    Missing,
+
+    UnsupportedType,
+
+    /** The file size is below the minimum. */
+    TooSmall,
+
+    /** The quality score is below the minimum, so the photo can't be used. */
+    LowQuality,
+}
+
+/** Why risk assessment sent the application to a reviewer instead of approving it. */
+enum class ReviewReason {
+
+    /** Younger than 21 on the day the application was processed. */
+    Under21,
+
+    CategoryNotB,
+
+    /** The national ID is on the watchlist. */
+    OnWatchlist,
+
+    /** The photo passed the check, but its quality score is below the review threshold. */
+    LowPhotoQuality,
+}
+
+/** Why a reviewer rejected an application, in the reviewer's own words. Never blank. */
+@JvmInline
+value class RejectionReason private constructor(val text: String) {
+
+    companion object {
+
+        /** Returns null when [text] is blank. Removes surrounding spaces. */
+        fun parse(text: String): RejectionReason? {
+            val trimmedText = text.trim()
+            return if (trimmedText.isEmpty()) null else RejectionReason(text = trimmedText)
         }
     }
 }
