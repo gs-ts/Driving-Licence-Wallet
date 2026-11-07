@@ -38,8 +38,8 @@ data class LicenceApplication(
     /**
      * Adds [change] to the history, which moves the status.
      *
-     * Returns null when [change] doesn't start from the current status, for example because
-     * a duplicate run already made it.
+     * Returns null if the application isn't in the change's starting status ([StatusChange.from]).
+     * For example, a second approval returns null, because the application is already Approved.
      */
     fun record(change: StatusChange<ApplicationStatus>, timestamp: Instant): LicenceApplication? {
         if (change.from != status) return null
