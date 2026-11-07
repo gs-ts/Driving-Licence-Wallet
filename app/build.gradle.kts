@@ -64,9 +64,9 @@ detekt {
 dependencies {
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlinx.serialization)
-    implementation(libs.kotlinx.collections)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -78,13 +78,16 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-    implementation(libs.androidx.lifecycle.service)
-    implementation(libs.androidx.datastore.core)
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
-    implementation(libs.accompanist.permissions)
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.androidx.work.manager)
+    implementation(libs.sqlcipher.android)
+    implementation(libs.tink.android)
+    implementation(libs.timber)
 
     ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
     ksp(libs.androidx.room.compiler)
 
     detektPlugins(libs.detekt.rules.ktlint.wrapper)
@@ -99,6 +102,7 @@ dependencies {
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.work.manager.testing)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
