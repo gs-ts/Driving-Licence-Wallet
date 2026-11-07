@@ -55,7 +55,6 @@ androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", vers
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
-androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 androidx-work-manager = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work-manager" }
 androidx-work-manager-testing = { group = "androidx.work", name = "work-testing", version.ref = "work-manager" }
 sqlcipher-android = { group = "net.zetetic", name = "sqlcipher-android", version.ref = "sqlcipher" }
@@ -71,6 +70,7 @@ detekt-compose-rules = { group = "io.nlopez.compose.rules", name = "detekt", ver
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 androidx-room = { id = "androidx.room", version.ref = "room" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

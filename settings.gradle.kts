@@ -24,4 +24,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Driving Licence Wallet"
 include(":app")
+include(":data")
+include(":domain")
+include(":simulated-backend")
  
