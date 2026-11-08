@@ -119,7 +119,8 @@ internal class EncryptedPhotoStorage(
     /** Deletes what was written, and returns null. Logs only the error's type: its message can hold the photo's URI. */
     private fun discard(file: File, error: Exception): PhotoReference? {
         file.delete()
-        Timber.w("Couldn't store the photo of application %s: %s",
+        Timber.w(
+            "Couldn't store the photo of application %s: %s",
             file.name,
             error.javaClass.simpleName
         )
