@@ -1,8 +1,8 @@
 package gts.drivinglicencewallet.domain.processing
 
 import gts.drivinglicencewallet.domain.application.ApplicationId
-import gts.drivinglicencewallet.domain.application.ApplicationStore
 import gts.drivinglicencewallet.domain.application.LicenceApplication
+import gts.drivinglicencewallet.domain.application.LicenceApplicationRepository
 import gts.drivinglicencewallet.domain.application.RecordResult
 import gts.drivinglicencewallet.domain.workflow.ApplicationStatus
 import gts.drivinglicencewallet.domain.workflow.StatusChange
@@ -13,7 +13,7 @@ import kotlin.time.Clock
  * A run after a crash starts from the saved status, so a finished step never runs again.
  */
 class ProcessApplicationUseCase(
-    private val store: ApplicationStore,
+    private val repository: LicenceApplicationRepository,
     private val backend: IssuerBackend,
     private val clock: Clock,
     private val maxAttempts: Int,
@@ -24,7 +24,7 @@ class ProcessApplicationUseCase(
      * */
     suspend operator fun invoke(id: ApplicationId, attempt: Int): ProcessingResult {
         // No such application: there's nothing to process, and a retry wouldn't find it either.
-        val application = store.find(id = id) ?: return ProcessingResult.Done
+        val application = repository.find(id = id) ?: return ProcessingResult.Done
         return continueFrom(application = application, attempt = attempt)
     }
 
@@ -145,7 +145,7 @@ class ProcessApplicationUseCase(
         change: StatusChange<ApplicationStatus>,
         attempt: Int,
     ): ProcessingResult {
-        val result = store.record(
+        val result = repository.record(
             id = id,
             change = change,
             timestamp = clock.now()

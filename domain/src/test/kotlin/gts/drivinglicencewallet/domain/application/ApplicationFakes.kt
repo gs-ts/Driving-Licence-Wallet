@@ -15,8 +15,8 @@ import kotlin.test.assertNotNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-/** An in-memory [ApplicationStore]. */
-class FakeApplicationStore : ApplicationStore {
+/** An in-memory [LicenceApplicationRepository]. */
+class FakeLicenceApplicationRepository : LicenceApplicationRepository {
 
     private val applications = MutableStateFlow<Map<ApplicationId, LicenceApplication>>(emptyMap())
     private val recordLock = Mutex()

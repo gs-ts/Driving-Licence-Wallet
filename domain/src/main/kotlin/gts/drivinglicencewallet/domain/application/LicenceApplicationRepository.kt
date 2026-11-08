@@ -11,7 +11,7 @@ import kotlin.time.Instant
  * A status change and its history entry are saved together. So anything that reads an application
  * (the status screen, the worker, a test, or the app after a crash) never sees one without the other.
  */
-interface ApplicationStore {
+interface LicenceApplicationRepository {
 
     suspend fun add(application: LicenceApplication)
 

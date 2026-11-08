@@ -5,8 +5,8 @@ import gts.drivinglicencewallet.data.database.entities.LicenceApplicationWithHis
 import gts.drivinglicencewallet.data.database.entities.toApplicationOrNull
 import gts.drivinglicencewallet.data.database.entities.toEntity
 import gts.drivinglicencewallet.domain.application.ApplicationId
-import gts.drivinglicencewallet.domain.application.ApplicationStore
 import gts.drivinglicencewallet.domain.application.LicenceApplication
+import gts.drivinglicencewallet.domain.application.LicenceApplicationRepository
 import gts.drivinglicencewallet.domain.application.RecordResult
 import gts.drivinglicencewallet.domain.workflow.ApplicationStatus
 import gts.drivinglicencewallet.domain.workflow.StatusChange
@@ -22,7 +22,7 @@ import kotlin.time.Instant
  * [record] checks the status and saves the change in one write transaction, so two runs can't both
  * make the same move. An application that can't be read back is left out and logged by its ID only.
  */
-internal class RoomApplicationStore(private val database: LicenceDatabase) : ApplicationStore {
+internal class RoomLicenceApplicationRepository(private val database: LicenceDatabase) : LicenceApplicationRepository {
 
     private val dao = database.licenceApplicationDao()
 

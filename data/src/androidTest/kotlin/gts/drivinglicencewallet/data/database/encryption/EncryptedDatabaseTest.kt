@@ -2,7 +2,7 @@ package gts.drivinglicencewallet.data.database.encryption
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import gts.drivinglicencewallet.data.database.NATIONAL_ID
-import gts.drivinglicencewallet.data.database.RoomApplicationStore
+import gts.drivinglicencewallet.data.database.RoomLicenceApplicationRepository
 import gts.drivinglicencewallet.data.database.TestDatabaseFiles
 import gts.drivinglicencewallet.data.database.containsSequence
 import gts.drivinglicencewallet.data.database.submittedApplication
@@ -36,7 +36,7 @@ class EncryptedDatabaseTest {
     fun givenASavedApplication_whenTheDatabaseFilesAreRead_thenTheyHoldNoSqliteHeaderAndNoNationalId() = runTest {
         val application = submittedApplication(id = "application-1")
         val database = files.open()
-        RoomApplicationStore(database = database).add(application = application)
+        RoomLicenceApplicationRepository(database = database).add(application = application)
 
         // Recent writes may still be in the write-ahead log, so it's checked too.
         val savedFiles = listOf(files.databaseFile, File("${files.databaseFile.path}-wal"), File("${files.databaseFile.path}-shm"))
@@ -48,7 +48,7 @@ class EncryptedDatabaseTest {
 
         // A new key reader finds the saved key, as after a restart, so the data is really in these files.
         val reopened = files.open()
-        assertEquals(expected = application, actual = RoomApplicationStore(database = reopened).find(id = application.id))
+        assertEquals(expected = application, actual = RoomLicenceApplicationRepository(database = reopened).find(id = application.id))
         reopened.close()
     }
 
@@ -56,16 +56,16 @@ class EncryptedDatabaseTest {
     fun givenASavedApplication_whenTheDatabaseIsOpenedWithAnotherKey_thenReadingFailsAndTheDataIsKept() = runTest {
         val application = submittedApplication(id = "application-1")
         val database = files.open()
-        RoomApplicationStore(database = database).add(application = application)
+        RoomLicenceApplicationRepository(database = database).add(application = application)
         database.close()
 
         val withAnotherKey = files.open(key = { ByteArray(size = 32) })
-        assertFails { RoomApplicationStore(database = withAnotherKey).find(id = application.id) }
+        assertFails { RoomLicenceApplicationRepository(database = withAnotherKey).find(id = application.id) }
         withAnotherKey.close()
 
         // A wrong key must never cost the data: SQLCipher refuses to open the file and leaves it as it is.
         val reopened = files.open()
-        assertEquals(expected = application, actual = RoomApplicationStore(database = reopened).find(id = application.id))
+        assertEquals(expected = application, actual = RoomLicenceApplicationRepository(database = reopened).find(id = application.id))
         reopened.close()
     }
 

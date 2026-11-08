@@ -10,7 +10,7 @@ import kotlin.time.Clock
  * A decision on any other application is refused.
  */
 class ManualReviewUseCase(
-    private val store: ApplicationStore,
+    private val repository: LicenceApplicationRepository,
     private val clock: Clock,
 ) {
 
@@ -24,9 +24,9 @@ class ManualReviewUseCase(
         change = ApplicationStatus.PendingManualReview.reject(reason = reason)
     )
 
-    /** The store checks that the application is still pending when it saves, so a double tap can't record two decisions. */
+    /** The repository checks that the application is still pending when it saves, so a double tap can't record two decisions. */
     private suspend fun recordDecision(id: ApplicationId, change: StatusChange<ApplicationStatus>): ReviewResult {
-        val result = store.record(
+        val result = repository.record(
             id = id,
             change = change,
             timestamp = clock.now()

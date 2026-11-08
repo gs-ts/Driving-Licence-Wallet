@@ -10,7 +10,7 @@ import kotlin.time.Clock
  * Refuses while another application is in progress. Don't run two submits at once: both could pass that check.
  */
 class SubmitApplicationUseCase(
-    private val store: ApplicationStore,
+    private val repository: LicenceApplicationRepository,
     private val photoStorage: PhotoStorage,
     private val scheduler: ProcessingScheduler,
     private val idGenerator: ApplicationIdGenerator,
@@ -18,7 +18,7 @@ class SubmitApplicationUseCase(
 ) {
 
     suspend operator fun invoke(details: ApplicantDetails, photo: PhotoSource): SubmitResult {
-        val inProgress = store.findInProgress()
+        val inProgress = repository.findInProgress()
         return if (inProgress == null) {
             submitNew(details = details, photo = photo)
         } else {
@@ -36,7 +36,7 @@ class SubmitApplicationUseCase(
             timestamp = clock.now()
         )
         // Save first, so the worker always finds the application.
-        store.add(application = application)
+        repository.add(application = application)
         scheduler.schedule(id = id)
         return SubmitResult.Submitted(application = application)
     }

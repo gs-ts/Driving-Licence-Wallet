@@ -16,7 +16,7 @@ class SubmitApplicationUseCaseTest {
     private val now = Instant.parse("2026-11-07T10:00:00Z")
     private val photo = PhotoSource("content://photos/1")
     private val newId = ApplicationId("application-2")
-    private val store = FakeApplicationStore()
+    private val repository = FakeLicenceApplicationRepository()
     private val scheduled = mutableListOf<ApplicationId>()
     private var savedBeforeScheduling = false
     private val submitApplication = submitApplicationWith(photoStorage = FakePhotoStorage())
@@ -30,7 +30,7 @@ class SubmitApplicationUseCaseTest {
         assertEquals(expected = ApplicationStatus.Submitted, actual = application.status)
         assertEquals(expected = now, actual = application.createdAt)
         assertEquals(expected = PhotoReference(value = "photo-application-2"), actual = application.photo)
-        assertEquals(expected = application, actual = store[newId])
+        assertEquals(expected = application, actual = repository[newId])
         assertEquals(expected = listOf(newId), actual = scheduled)
         assertTrue(actual = savedBeforeScheduling)
     }
@@ -38,12 +38,12 @@ class SubmitApplicationUseCaseTest {
     @Test
     fun `given an application in progress, when the applicant submits another, then it is refused and nothing new is saved or scheduled`() = runTest {
         val inProgress = submittedApplication(id = ApplicationId(value = "application-1"), timestamp = now)
-        store.add(inProgress)
+        repository.add(inProgress)
 
         val result = submitApplication(details = completeDetails(), photo = photo)
 
         assertEquals(expected = SubmitResult.AnotherInProgress(application = inProgress), actual = result)
-        assertNull(actual = store[newId])
+        assertNull(actual = repository[newId])
         assertTrue(actual = scheduled.isEmpty())
     }
 
@@ -52,7 +52,7 @@ class SubmitApplicationUseCaseTest {
         val failed = submittedApplication(id = ApplicationId(value = "application-1"), timestamp = now)
             .recordOrFail(change = ApplicationStatus.Submitted.startProcessing(), timestamp = now)
             .recordOrFail(change = ApplicationStatus.ValidatingData.abandon(attempts = 3), timestamp = now)
-        store.add(failed)
+        repository.add(failed)
 
         val result = submitApplication(details = completeDetails(), photo = photo)
 
@@ -67,15 +67,15 @@ class SubmitApplicationUseCaseTest {
         val result = submitApplication(details = completeDetails(), photo = photo)
 
         assertEquals(expected = SubmitResult.PhotoNotSaved, result)
-        assertNull(actual = store[newId])
+        assertNull(actual = repository[newId])
         assertTrue(actual = scheduled.isEmpty())
     }
 
     private fun submitApplicationWith(photoStorage: PhotoStorage) = SubmitApplicationUseCase(
-        store = store,
+        repository = repository,
         photoStorage = photoStorage,
         scheduler = { id ->
-            savedBeforeScheduling = store[id] != null
+            savedBeforeScheduling = repository[id] != null
             scheduled += id
         },
         idGenerator = { newId },

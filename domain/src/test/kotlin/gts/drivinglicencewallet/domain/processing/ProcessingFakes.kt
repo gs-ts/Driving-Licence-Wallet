@@ -2,8 +2,8 @@ package gts.drivinglicencewallet.domain.processing
 
 import gts.drivinglicencewallet.domain.applicant.ApplicantDetails
 import gts.drivinglicencewallet.domain.application.ApplicationId
-import gts.drivinglicencewallet.domain.application.ApplicationStore
-import gts.drivinglicencewallet.domain.application.FakeApplicationStore
+import gts.drivinglicencewallet.domain.application.FakeLicenceApplicationRepository
+import gts.drivinglicencewallet.domain.application.LicenceApplicationRepository
 import gts.drivinglicencewallet.domain.application.PhotoReference
 import gts.drivinglicencewallet.domain.application.RecordResult
 import gts.drivinglicencewallet.domain.workflow.ApplicationStatus
@@ -54,11 +54,11 @@ enum class BackendCall { CheckData, CheckPhoto, AssessRisk }
 class SimulatedCrash : RuntimeException()
 
 /** Crashes right before or right after saving its [crashOn]th change, counting from 1. */
-class CrashingStore(
-    private val store: FakeApplicationStore,
+class CrashingRepository(
+    private val repository: FakeLicenceApplicationRepository,
     private val crashOn: Int,
     private val afterSaving: Boolean,
-) : ApplicationStore by store {
+) : LicenceApplicationRepository by repository {
 
     private var saves = 0
 
@@ -69,24 +69,24 @@ class CrashingStore(
     ): RecordResult {
         saves += 1
         if (saves == crashOn && !afterSaving) throw SimulatedCrash()
-        val result = store.record(id = id, change = change, timestamp = timestamp)
+        val result = repository.record(id = id, change = change, timestamp = timestamp)
         if (saves == crashOn && afterSaving) throw SimulatedCrash()
         return result
     }
 }
 
 /** Another run saves the same change first, when the change starts from [raceAt]. */
-class RacingStore(
-    private val store: FakeApplicationStore,
+class RacingRepository(
+    private val repository: FakeLicenceApplicationRepository,
     private val raceAt: ApplicationStatus,
-) : ApplicationStore by store {
+) : LicenceApplicationRepository by repository {
 
     override suspend fun record(
         id: ApplicationId,
         change: StatusChange<ApplicationStatus>,
         timestamp: Instant
     ): RecordResult {
-        if (change.from == raceAt) store.record(id = id, change = change, timestamp = timestamp)
-        return store.record(id = id, change = change, timestamp = timestamp)
+        if (change.from == raceAt) repository.record(id = id, change = change, timestamp = timestamp)
+        return repository.record(id = id, change = change, timestamp = timestamp)
     }
 }

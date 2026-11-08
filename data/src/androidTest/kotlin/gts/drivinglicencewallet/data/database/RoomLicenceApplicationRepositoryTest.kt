@@ -26,21 +26,21 @@ import kotlin.time.Duration.Companion.minutes
 
 // Device tests can't have spaces in their names: minSdk is 29, and DEX allows spaces only from API 30.
 @RunWith(AndroidJUnit4::class)
-class RoomApplicationStoreTest {
+class RoomLicenceApplicationRepositoryTest {
 
-    private val files = TestDatabaseFiles(name = "store-test")
+    private val files = TestDatabaseFiles(name = "repository-test")
     private lateinit var database: LicenceDatabase
-    private lateinit var store: RoomApplicationStore
+    private lateinit var repository: RoomLicenceApplicationRepository
 
     @BeforeTest
-    fun openStore() {
+    fun openRepository() {
         files.delete()
         database = files.open()
-        store = RoomApplicationStore(database = database)
+        repository = RoomLicenceApplicationRepository(database = database)
     }
 
     @AfterTest
-    fun deleteStore() {
+    fun deleteRepository() {
         // If the setup failed, there's nothing to close, and its error is the one to see.
         if (::database.isInitialized) database.close()
         files.delete()
@@ -86,37 +86,37 @@ class RoomApplicationStoreTest {
             ),
         )
 
-        applications.forEach { application -> store.add(application = application) }
+        applications.forEach { application -> repository.add(application = application) }
 
-        applications.forEach { application -> assertEquals(expected = application, actual = store.find(id = application.id)) }
+        applications.forEach { application -> assertEquals(expected = application, actual = repository.find(id = application.id)) }
     }
 
     @Test
     fun givenASubmittedApplication_whenProcessingStartIsRecorded_thenTheChangeIsSavedAndReturned() = runTest {
         val submitted = submittedApplication(id = "application-1")
-        store.add(application = submitted)
+        repository.add(application = submitted)
         val processing = submitted.recordAll(ApplicationStatus.Submitted.startProcessing())
 
-        val result = store.record(id = submitted.id, change = ApplicationStatus.Submitted.startProcessing(), timestamp = processing.updatedAt)
+        val result = repository.record(id = submitted.id, change = ApplicationStatus.Submitted.startProcessing(), timestamp = processing.updatedAt)
 
         assertEquals(expected = RecordResult.Recorded(application = processing), actual = result)
-        assertEquals(expected = processing, actual = store.find(id = submitted.id))
+        assertEquals(expected = processing, actual = repository.find(id = submitted.id))
     }
 
     @Test
     fun givenASubmittedApplication_whenAMoveFromAnotherStatusIsRecorded_thenItIsRefusedAndNothingIsSaved() = runTest {
         val submitted = submittedApplication(id = "application-1")
-        store.add(application = submitted)
+        repository.add(application = submitted)
 
-        val result = store.record(id = submitted.id, change = ApplicationStatus.ValidatingData.pass(), timestamp = submittedAt + 1.minutes)
+        val result = repository.record(id = submitted.id, change = ApplicationStatus.ValidatingData.pass(), timestamp = submittedAt + 1.minutes)
 
         assertEquals(expected = RecordResult.Refused(current = submitted), actual = result)
-        assertEquals(expected = submitted, actual = store.find(id = submitted.id))
+        assertEquals(expected = submitted, actual = repository.find(id = submitted.id))
     }
 
     @Test
     fun givenNoSuchApplication_whenAMoveIsRecorded_thenItIsNotFound() = runTest {
-        val result = store.record(
+        val result = repository.record(
             id = ApplicationId(value = "missing"),
             change = ApplicationStatus.Submitted.startProcessing(),
             timestamp = submittedAt
@@ -128,28 +128,28 @@ class RoomApplicationStoreTest {
     @Test
     fun givenTenRunsRecordingTheSameMoveAtOnce_whenTheyFinish_thenExactlyOneIsRecorded() = runTest {
         val submitted = submittedApplication(id = "application-1")
-        store.add(application = submitted)
+        repository.add(application = submitted)
 
         val results = List(size = 10) {
             async(context = Dispatchers.IO) {
-                store.record(id = submitted.id, change = ApplicationStatus.Submitted.startProcessing(), timestamp = submittedAt + 1.minutes)
+                repository.record(id = submitted.id, change = ApplicationStatus.Submitted.startProcessing(), timestamp = submittedAt + 1.minutes)
             }
         }.awaitAll()
 
         assertEquals(expected = 1, actual = results.count { result -> result is RecordResult.Recorded })
         assertEquals(expected = 9, actual = results.count { result -> result is RecordResult.Refused })
-        assertEquals(expected = 2, actual = store.find(id = submitted.id)?.history?.size)
+        assertEquals(expected = 2, actual = repository.find(id = submitted.id)?.history?.size)
     }
 
     @Test
     fun givenAnObserver_whenAMoveIsRecorded_thenItGetsTheApplicationWithTheNewStatusAndEntry() = runTest {
         val submitted = submittedApplication(id = "application-1")
-        store.add(application = submitted)
+        repository.add(application = submitted)
         val processing = submitted.recordAll(ApplicationStatus.Submitted.startProcessing())
 
-        store.observe(id = submitted.id).test {
+        repository.observe(id = submitted.id).test {
             assertEquals(expected = submitted, actual = awaitItem())
-            store.record(id = submitted.id, change = ApplicationStatus.Submitted.startProcessing(), timestamp = processing.updatedAt)
+            repository.record(id = submitted.id, change = ApplicationStatus.Submitted.startProcessing(), timestamp = processing.updatedAt)
             assertEquals(expected = processing, actual = awaitItem())
         }
     }
@@ -163,10 +163,10 @@ class RoomApplicationStoreTest {
             ApplicationStatus.RiskAssessment.approveAutomatically(),
         )
         val inProgress = submittedApplication(id = "in-progress").recordAll(ApplicationStatus.Submitted.startProcessing())
-        store.add(application = approved)
-        store.add(application = inProgress)
+        repository.add(application = approved)
+        repository.add(application = inProgress)
 
-        assertEquals(expected = inProgress, actual = store.findInProgress())
+        assertEquals(expected = inProgress, actual = repository.findInProgress())
     }
 
     @Test
@@ -178,7 +178,7 @@ class RoomApplicationStoreTest {
             dao.insertApplication(application = application.toEntity())
             dao.insertHistory(events = listOf(element = application.history.single().toEntity(applicationId = application.id)))
         }
-        // Written straight to the database, because the store only saves moves the workflow allows.
+        // Written straight to the database, because the repository only saves moves the workflow allows.
         dao.insertHistory(
             events = listOf(
                 historyEvent(applicationId = skipsSteps.id, event = EventCode.AutoApproved.name),
@@ -186,9 +186,9 @@ class RoomApplicationStoreTest {
             )
         )
 
-        assertNull(actual = store.find(id = skipsSteps.id))
-        assertNull(actual = store.find(id = unknownEvent.id))
-        assertNull(actual = store.findInProgress())
+        assertNull(actual = repository.find(id = skipsSteps.id))
+        assertNull(actual = repository.find(id = unknownEvent.id))
+        assertNull(actual = repository.findInProgress())
     }
 
     private fun historyEvent(applicationId: ApplicationId, event: String) = HistoryEventEntity(
