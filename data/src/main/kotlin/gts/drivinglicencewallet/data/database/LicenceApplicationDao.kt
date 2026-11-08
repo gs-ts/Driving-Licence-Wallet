@@ -29,4 +29,8 @@ internal interface LicenceApplicationDao {
     @Transaction
     @Query(value = "SELECT * FROM applications WHERE id = :id")
     fun observe(id: String): Flow<LicenceApplicationWithHistory?>
+
+    /** The photo of every application, for the start-up clean-up. */
+    @Query(value = "SELECT photoReference FROM applications")
+    suspend fun findPhotoReferences(): List<String>
 }
