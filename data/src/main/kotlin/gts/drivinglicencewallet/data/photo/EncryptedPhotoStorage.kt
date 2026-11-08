@@ -8,6 +8,7 @@ import gts.drivinglicencewallet.domain.application.ApplicationId
 import gts.drivinglicencewallet.domain.application.PhotoReference
 import gts.drivinglicencewallet.domain.application.PhotoStorage
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
@@ -36,7 +37,7 @@ internal class EncryptedPhotoStorage(
     private val contentResolver: ContentResolver,
     private val directory: File,
     private val key: PhotoKey,
-    private val ioDispatcher: CoroutineDispatcher,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : PhotoStorage, PhotoReader {
 
     /** Read or made on first use, then kept, so two photos stored at once can't each make a new key. */
