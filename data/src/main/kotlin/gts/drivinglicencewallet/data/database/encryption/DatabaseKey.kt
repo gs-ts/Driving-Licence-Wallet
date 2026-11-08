@@ -1,6 +1,7 @@
 package gts.drivinglicencewallet.data.database.encryption
 
 import android.util.AtomicFile
+import androidx.core.util.writeBytes
 import com.google.crypto.tink.integration.android.AndroidKeystore
 import java.io.File
 import java.io.IOException
@@ -25,7 +26,10 @@ internal class DatabaseKey(
     fun get(): ByteArray = if (databaseFile.exists()) read() else create()
 
     private fun read(): ByteArray = try {
-        AndroidKeystore.getAead(keystoreAlias).decrypt(AtomicFile(keyFile).readFully(), ASSOCIATED_DATA)
+        AndroidKeystore.getAead(keystoreAlias).decrypt(
+            AtomicFile(keyFile).readFully(),
+            ASSOCIATED_DATA
+        )
     } catch (exception: GeneralSecurityException) {
         throw IllegalStateException("Can't decrypt the database key, so the database can't be opened.", exception)
     } catch (exception: IOException) {
@@ -35,21 +39,11 @@ internal class DatabaseKey(
     private fun create(): ByteArray {
         val key = ByteArray(size = KEY_SIZE_BYTES).also { bytes -> SecureRandom().nextBytes(bytes) }
         AndroidKeystore.generateNewAes256GcmKey(keystoreAlias)
-        write(encryptedKey = AndroidKeystore.getAead(keystoreAlias).encrypt(key, ASSOCIATED_DATA))
+        // AtomicFile writes the whole file or nothing, so a crash can't leave half a key.
+        AtomicFile(keyFile).writeBytes(
+            array = AndroidKeystore.getAead(keystoreAlias).encrypt(key, ASSOCIATED_DATA)
+        )
         return key
-    }
-
-    /** Writes the whole file or nothing, so a crash can't leave half a key. */
-    private fun write(encryptedKey: ByteArray) {
-        val file = AtomicFile(keyFile)
-        val stream = file.startWrite()
-        try {
-            stream.write(encryptedKey)
-            file.finishWrite(stream)
-        } catch (exception: IOException) {
-            file.failWrite(stream)
-            throw exception
-        }
     }
 
     private companion object {

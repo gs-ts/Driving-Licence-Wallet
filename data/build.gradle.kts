@@ -40,6 +40,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":simulated-backend"))
 
+    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.room3.runtime)
     implementation(libs.sqlcipher.android)
     implementation(libs.tink.android)
