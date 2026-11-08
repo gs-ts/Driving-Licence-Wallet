@@ -12,7 +12,7 @@ import kotlin.time.Clock
  * Runs an application's processing steps one at a time, and saves each step before the next.
  * A run after a crash starts from the saved status, so a finished step never runs again.
  */
-class ProcessApplication(
+class ProcessApplicationUseCase(
     private val store: ApplicationStore,
     private val backend: IssuerBackend,
     private val clock: Clock,

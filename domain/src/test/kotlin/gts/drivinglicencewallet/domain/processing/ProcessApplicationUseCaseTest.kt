@@ -29,7 +29,7 @@ import kotlin.test.assertNotNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-class ProcessApplicationTest {
+class ProcessApplicationUseCaseTest {
 
     private val submittedAt = Instant.parse(input = "2026-11-08T09:00:00Z")
     private val processedAt = Instant.parse(input = "2026-11-08T09:05:00Z")
@@ -218,7 +218,7 @@ class ProcessApplicationTest {
         attempt: Int = 1,
         clock: Clock = FixedClock(instant = processedAt),
     ): ProcessingResult {
-        val processApplication = ProcessApplication(
+        val processApplication = ProcessApplicationUseCase(
             store = store,
             backend = backend,
             clock = clock,

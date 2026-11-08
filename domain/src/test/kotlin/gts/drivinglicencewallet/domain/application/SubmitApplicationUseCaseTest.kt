@@ -11,7 +11,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 
-class SubmitApplicationTest {
+class SubmitApplicationUseCaseTest {
 
     private val now = Instant.parse("2026-11-07T10:00:00Z")
     private val photo = PhotoSource("content://photos/1")
@@ -71,7 +71,7 @@ class SubmitApplicationTest {
         assertTrue(actual = scheduled.isEmpty())
     }
 
-    private fun submitApplicationWith(photoStorage: PhotoStorage) = SubmitApplication(
+    private fun submitApplicationWith(photoStorage: PhotoStorage) = SubmitApplicationUseCase(
         store = store,
         photoStorage = photoStorage,
         scheduler = { id ->

@@ -9,7 +9,7 @@ import kotlin.time.Clock
  * Lets a reviewer approve or reject an application that is waiting for review. The decision goes into its history.
  * A decision on any other application is refused.
  */
-class ManualReview(
+class ManualReviewUseCase(
     private val store: ApplicationStore,
     private val clock: Clock,
 ) {

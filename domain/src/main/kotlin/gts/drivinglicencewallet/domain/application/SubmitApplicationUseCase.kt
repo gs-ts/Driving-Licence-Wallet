@@ -9,7 +9,7 @@ import kotlin.time.Clock
  *
  * Refuses while another application is in progress. Don't run two submits at once: both could pass that check.
  */
-class SubmitApplication(
+class SubmitApplicationUseCase(
     private val store: ApplicationStore,
     private val photoStorage: PhotoStorage,
     private val scheduler: ProcessingScheduler,

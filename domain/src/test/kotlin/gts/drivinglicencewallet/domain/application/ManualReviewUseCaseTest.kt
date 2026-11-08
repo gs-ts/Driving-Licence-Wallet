@@ -12,14 +12,14 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.time.Instant
 
-class ManualReviewTest {
+class ManualReviewUseCaseTest {
 
     private val submittedAt = Instant.parse("2026-11-07T10:00:00Z")
     private val decidedAt = Instant.parse("2026-11-07T11:00:00Z")
     private val id = ApplicationId("application-1")
     private val reason = assertNotNull(RejectionReason.parse("The photo doesn't show the applicant"))
     private val store = FakeApplicationStore()
-    private val manualReview = ManualReview(store = store, clock = FixedClock(decidedAt))
+    private val manualReview = ManualReviewUseCase(store = store, clock = FixedClock(decidedAt))
 
     @Test
     fun `given an application pending manual review, when the reviewer approves it, then it is approved and the approval is added to its history`() = runTest {
