@@ -35,6 +35,10 @@ data class LicenceApplication(
     val updatedAt: Instant
         get() = history.last().timestamp
 
+    /** When processing started, or null before then. The age rules use this time, so every run uses the same one. */
+    val processingStartedAt: Instant?
+        get() = history.firstOrNull { entry -> entry.event == WorkflowEvent.ProcessingStarted }?.timestamp
+
     /**
      * Adds [change] to the history, which moves the status.
      *
