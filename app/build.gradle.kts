@@ -41,6 +41,8 @@ android {
         compose = true
         aidl = false
         resValues = false
+        // For BuildConfig.DEBUG: debug logs only. It's a constant, so R8 removes the debug code from release.
+        buildConfig = true
     }
 }
 
