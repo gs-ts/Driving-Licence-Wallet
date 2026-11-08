@@ -59,7 +59,8 @@ complexity:
   CyclomaticComplexMethod:
     active: true
     allowedComplexity: 18
-    ignoreSingleWhenExpression: false
+    # A function that is one `when`, such as a mapper, stays easy to read however many branches it has.
+    ignoreSingleWhenExpression: true
     ignoreSimpleWhenEntries: false
     ignoreNestingFunctions: false
     nestingFunctions:
@@ -421,6 +422,13 @@ potential-bugs:
   MissingPackageDeclaration:
     active: false
     excludes: ['**/*.kts']
+  MissingUseCall:
+    active: true
+    ignoreClass:
+      - 'java.io.ByteArrayInputStream'
+      - 'java.io.ByteArrayOutputStream'
+      # A driver opens connections for Room, and Room closes them.
+      - 'androidx.sqlite.SQLiteConnection'
   NullCheckOnMutableProperty:
     active: false
   NullableToStringCall:
@@ -608,7 +616,8 @@ style:
       - 'equals'
     excludeLabeled: false
     excludeReturnFromLambda: true
-    excludeGuardClauses: false
+    # Early exits at the top, such as `val x = parse() ?: return null`, make a function simpler, not harder.
+    excludeGuardClauses: true
   SafeCast:
     active: true
   SerialVersionUIDInSerializableClass:
