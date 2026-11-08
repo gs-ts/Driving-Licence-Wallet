@@ -66,4 +66,5 @@ dependencies {
     androidTestImplementation(libs.kotlin.test.junit)
     androidTestImplementation(libs.kotlin.coroutines.test)
     androidTestImplementation(libs.app.cash.turbine)
+    androidTestImplementation(libs.androidx.work.manager.testing)
 }
