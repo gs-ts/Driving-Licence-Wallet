@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.androidx.room)
+    alias(libs.plugins.androidx.room3)
     alias(libs.plugins.detekt)
 }
 
@@ -14,6 +14,8 @@ android {
 
     defaultConfig {
         minSdk = 29
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -22,7 +24,7 @@ android {
     }
 }
 
-room { // https://developer.android.com/jetpack/androidx/releases/room#gradle-plugin
+room3 { // https://developer.android.com/jetpack/androidx/releases/room3
     schemaDirectory("$projectDir/schemas")
 }
 
@@ -38,8 +40,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":simulated-backend"))
 
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room3.runtime)
     implementation(libs.sqlcipher.android)
     implementation(libs.tink.android)
     implementation(libs.androidx.work.manager)
@@ -49,7 +50,7 @@ dependencies {
 
     ksp(libs.hilt.compiler)
     ksp(libs.androidx.hilt.compiler)
-    ksp(libs.androidx.room.compiler)
+    ksp(libs.androidx.room3.compiler)
 
     // The shared detekt config has ktlint and Compose sections; config validation needs both plugins.
     detektPlugins(libs.detekt.rules.ktlint.wrapper)
@@ -57,4 +58,11 @@ dependencies {
 
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlin.coroutines.test)
+
+    // The store and the key run against the real encrypted database and the real Keystore, on a device.
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.kotlin.test.junit)
+    androidTestImplementation(libs.kotlin.coroutines.test)
+    androidTestImplementation(libs.app.cash.turbine)
 }

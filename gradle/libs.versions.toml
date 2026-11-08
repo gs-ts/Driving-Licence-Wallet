@@ -11,7 +11,7 @@ compose-foundation = "1.12.1"
 compose-ui = "1.12.1"
 compose-material3 = "1.5.0-rc01"
 navigation3-core = "1.2.1"
-room = "2.8.5"
+room3 = "3.0.3"
 hilt = "2.60.1"
 androidx-hilt = "1.4.0"
 work-manager = "2.12.0"
@@ -20,6 +20,7 @@ tink = "1.24.0"
 timber = "5.0.1"
 junit = "4.13.2"
 junitVersion = "1.3.0"
+test-runner = "1.7.0"
 espresso-core = "3.7.0"
 uiautomator = "2.4.1"
 benchmarkMacroJunit4 = "1.5.0"
@@ -52,9 +53,8 @@ hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.r
 androidx-hilt-lifecycle-viewmodel-compose = { group = "androidx.hilt", name = "hilt-lifecycle-viewmodel-compose", version.ref = "androidx-hilt" }
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "androidx-hilt" }
 androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "androidx-hilt" }
-androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
-androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
-androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+androidx-room3-runtime = { group = "androidx.room3", name = "room3-runtime", version.ref = "room3" }
+androidx-room3-compiler = { group = "androidx.room3", name = "room3-compiler", version.ref = "room3" }
 androidx-work-manager = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work-manager" }
 androidx-work-manager-testing = { group = "androidx.work", name = "work-testing", version.ref = "work-manager" }
 sqlcipher-android = { group = "net.zetetic", name = "sqlcipher-android", version.ref = "sqlcipher" }
@@ -62,6 +62,7 @@ tink-android = { group = "com.google.crypto.tink", name = "tink-android", versio
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "test-runner" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
 androidx-viewmodel-testing = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-testing", version.ref = "lifecycle" }
 app-cash-turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine"}
@@ -71,7 +72,7 @@ detekt-compose-rules = { group = "io.nlopez.compose.rules", name = "detekt", ver
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-androidx-room = { id = "androidx.room", version.ref = "room" }
+androidx-room3 = { id = "androidx.room3", version.ref = "room3" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
