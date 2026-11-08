@@ -19,7 +19,7 @@ import java.time.format.DateTimeParseException
  * There's no status column. The status comes from the history, so the two can't disagree.
  */
 @Entity(tableName = "applications")
-internal data class ApplicationEntity(
+internal data class LicenceApplicationEntity(
     @PrimaryKey val id: String,
     val firstName: String,
     val lastName: String,
@@ -34,7 +34,7 @@ internal data class ApplicationEntity(
     val photoReference: String,
 )
 
-internal fun LicenceApplication.toEntity(): ApplicationEntity = ApplicationEntity(
+internal fun LicenceApplication.toEntity(): LicenceApplicationEntity = LicenceApplicationEntity(
     id = id.value,
     firstName = details.firstName.text,
     lastName = details.lastName.text,
@@ -48,7 +48,7 @@ internal fun LicenceApplication.toEntity(): ApplicationEntity = ApplicationEntit
 )
 
 /** The applicant's details as saved, or null if one of them doesn't pass its check. */
-internal fun ApplicationEntity.toDetailsOrNull(): ApplicantDetails? = ApplicantDetails(
+internal fun LicenceApplicationEntity.toDetailsOrNull(): ApplicantDetails? = ApplicantDetails(
     firstName = PersonName.parse(text = firstName) ?: return null,
     lastName = PersonName.parse(text = lastName) ?: return null,
     dateOfBirth = dateOrNull(text = dateOfBirth) ?: return null,

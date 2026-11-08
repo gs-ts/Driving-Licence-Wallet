@@ -6,15 +6,15 @@ import androidx.room3.Room
 import androidx.room3.RoomDatabase
 import gts.drivinglicencewallet.data.database.encryption.DatabaseKey
 import gts.drivinglicencewallet.data.database.encryption.EncryptedDriver
-import gts.drivinglicencewallet.data.database.entities.ApplicationEntity
 import gts.drivinglicencewallet.data.database.entities.HistoryEventEntity
+import gts.drivinglicencewallet.data.database.entities.LicenceApplicationEntity
 import java.io.File
 
 /** The applications and their histories, encrypted with SQLCipher. */
-@Database(entities = [ApplicationEntity::class, HistoryEventEntity::class], version = 1)
+@Database(entities = [LicenceApplicationEntity::class, HistoryEventEntity::class], version = 1)
 internal abstract class LicenceDatabase : RoomDatabase() {
 
-    abstract fun applicationDao(): ApplicationDao
+    abstract fun licenceApplicationDao(): LicenceApplicationDao
 }
 
 /** Opens the database in [databaseFile], encrypted with [key], such as [DatabaseKey.get]. */

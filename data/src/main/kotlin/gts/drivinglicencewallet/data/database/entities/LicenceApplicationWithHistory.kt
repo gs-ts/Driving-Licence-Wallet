@@ -7,8 +7,8 @@ import gts.drivinglicencewallet.domain.application.LicenceApplication
 import gts.drivinglicencewallet.domain.application.PhotoReference
 
 /** An application with all its history lines, read together in one transaction. */
-internal data class ApplicationWithHistory(
-    @Embedded val application: ApplicationEntity,
+internal data class LicenceApplicationWithHistory(
+    @Embedded val application: LicenceApplicationEntity,
     @Relation(parentColumns = ["id"], entityColumns = ["applicationId"])
     val history: List<HistoryEventEntity>,
 )
@@ -17,7 +17,7 @@ internal data class ApplicationWithHistory(
  * Rebuilds the application from what's saved. Returns null if any of it can't be read: a value that
  * doesn't pass its check, an unknown code, or a history that doesn't follow the workflow.
  */
-internal fun ApplicationWithHistory.toApplicationOrNull(): LicenceApplication? {
+internal fun LicenceApplicationWithHistory.toApplicationOrNull(): LicenceApplication? {
     val details = application.toDetailsOrNull() ?: return null
     val events = history
         .sortedBy { saved -> saved.position }

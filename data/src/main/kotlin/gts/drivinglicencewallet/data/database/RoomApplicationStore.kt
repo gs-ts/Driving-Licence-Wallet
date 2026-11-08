@@ -1,7 +1,7 @@
 package gts.drivinglicencewallet.data.database
 
 import androidx.room3.withWriteTransaction
-import gts.drivinglicencewallet.data.database.entities.ApplicationWithHistory
+import gts.drivinglicencewallet.data.database.entities.LicenceApplicationWithHistory
 import gts.drivinglicencewallet.data.database.entities.toApplicationOrNull
 import gts.drivinglicencewallet.data.database.entities.toEntity
 import gts.drivinglicencewallet.domain.application.ApplicationId
@@ -24,7 +24,7 @@ import kotlin.time.Instant
  */
 internal class RoomApplicationStore(private val database: LicenceDatabase) : ApplicationStore {
 
-    private val dao = database.applicationDao()
+    private val dao = database.licenceApplicationDao()
 
     override suspend fun add(application: LicenceApplication) {
         database.withWriteTransaction {
@@ -65,7 +65,7 @@ internal class RoomApplicationStore(private val database: LicenceDatabase) : App
             .distinctUntilChanged()
 
     /** The application, or null if its saved data can't be read. Logs only the ID; the rest is personal data. */
-    private fun ApplicationWithHistory.readOrSkip(): LicenceApplication? {
+    private fun LicenceApplicationWithHistory.readOrSkip(): LicenceApplication? {
         val restored = toApplicationOrNull()
         if (restored == null) Timber.w("Skipped application %s: its saved data can't be read.", application.id)
         return restored

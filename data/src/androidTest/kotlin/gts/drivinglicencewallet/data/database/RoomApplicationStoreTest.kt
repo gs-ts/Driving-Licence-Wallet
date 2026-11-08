@@ -41,7 +41,8 @@ class RoomApplicationStoreTest {
 
     @AfterTest
     fun deleteStore() {
-        database.close()
+        // If the setup failed, there's nothing to close, and its error is the one to see.
+        if (::database.isInitialized) database.close()
         files.delete()
     }
 
@@ -170,7 +171,7 @@ class RoomApplicationStoreTest {
 
     @Test
     fun givenSavedHistoriesThatCantBeRead_whenTheyAreLookedUp_thenTheyAreLeftOut() = runTest {
-        val dao = database.applicationDao()
+        val dao = database.licenceApplicationDao()
         val skipsSteps = submittedApplication(id = "skips-steps")
         val unknownEvent = submittedApplication(id = "unknown-event")
         for (application in listOf(skipsSteps, unknownEvent)) {

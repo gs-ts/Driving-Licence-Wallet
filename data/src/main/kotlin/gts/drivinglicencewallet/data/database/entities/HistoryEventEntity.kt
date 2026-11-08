@@ -16,7 +16,7 @@ import androidx.room3.PrimaryKey
     tableName = "history",
     foreignKeys = [
         ForeignKey(
-            entity = ApplicationEntity::class,
+            entity = LicenceApplicationEntity::class,
             parentColumns = ["id"],
             childColumns = ["applicationId"]
         ),
