@@ -5,15 +5,18 @@ import gts.drivinglicencewallet.domain.workflow.ApplicationStatus
 import gts.drivinglicencewallet.domain.workflow.HistoryEntry
 import gts.drivinglicencewallet.domain.workflow.StatusChange
 import gts.drivinglicencewallet.domain.workflow.WorkflowEvent
+import gts.drivinglicencewallet.domain.workflow.changeFor
 import kotlin.time.Instant
 
 /**
  * An application for a driving licence: the applicant's details, their photo, and its history.
  *
  * The status and the dates come from the history, so they always agree with it. The history
- * starts with the submission and grows by one entry with each [record].
+ * starts with the submission and grows by one entry with each [record]. Only [submit], [record]
+ * and [restore] create applications, so a history always follows the workflow.
  */
-data class LicenceApplication(
+@ConsistentCopyVisibility
+data class LicenceApplication internal constructor(
     val id: ApplicationId,
     val details: ApplicantDetails,
     val photo: PhotoReference,
@@ -50,6 +53,10 @@ data class LicenceApplication(
         return copy(history = history + change.toHistoryEntry(timestamp = timestamp))
     }
 
+    /** Records [saved] again as the move it stands for. Returns null if the current status has no such move. */
+    private fun replay(saved: SavedEvent): LicenceApplication? =
+        status.changeFor(event = saved.event)?.let { change -> record(change = change, timestamp = saved.timestamp) }
+
     companion object {
 
         /** A new application, with its submission as the first history entry. */
@@ -64,8 +71,38 @@ data class LicenceApplication(
             photo = photo,
             history = listOf(element = ApplicationStatus.submit().toHistoryEntry(timestamp = timestamp))
         )
+
+        /**
+         * Rebuilds a saved application by replaying its [events] through the workflow, oldest first.
+         *
+         * Returns null if the events don't start with the submission, or if one of them isn't a move
+         * from the status before it. So a damaged history never reaches the app.
+         */
+        fun restore(
+            id: ApplicationId,
+            details: ApplicantDetails,
+            photo: PhotoReference,
+            events: List<SavedEvent>,
+        ): LicenceApplication? {
+            val submission = events.firstOrNull()?.takeIf { saved -> saved.event == WorkflowEvent.ApplicationSubmitted }
+            val submitted = submission?.let { saved ->
+                submit(
+                    id = id,
+                    details = details,
+                    photo = photo,
+                    timestamp = saved.timestamp
+                )
+            }
+            return events.drop(n = 1).fold(initial = submitted) { application, saved -> application?.replay(saved = saved) }
+        }
     }
 }
+
+/** One line of a saved history: what happened, and when. [LicenceApplication.restore] rebuilds the statuses from these. */
+data class SavedEvent(
+    val event: WorkflowEvent,
+    val timestamp: Instant,
+)
 
 /**
  * Identifies an application. The app creates it when the applicant submits, so it also works

@@ -128,6 +128,27 @@ sealed interface ApplicationStatus {
 }
 
 /**
+ * The move from this status that [event] stands for, or null if this status has no such move.
+ * Restoring a saved application replays its events through this.
+ */
+internal fun ApplicationStatus.changeFor(event: WorkflowEvent): StatusChange<ApplicationStatus>? {
+    return when (event) {
+        // The submission only starts a history; no status moves to it.
+        WorkflowEvent.ApplicationSubmitted -> null
+        WorkflowEvent.ProcessingStarted -> (this as? ApplicationStatus.Submitted)?.startProcessing()
+        WorkflowEvent.DataValidationPassed -> (this as? ApplicationStatus.ValidatingData)?.pass()
+        is WorkflowEvent.DataValidationFailed -> (this as? ApplicationStatus.ValidatingData)?.fail(problems = event.problems)
+        WorkflowEvent.PhotoCheckPassed -> (this as? ApplicationStatus.CheckingPhoto)?.pass()
+        is WorkflowEvent.PhotoCheckFailed -> (this as? ApplicationStatus.CheckingPhoto)?.fail(problems = event.problems)
+        WorkflowEvent.AutoApproved -> (this as? ApplicationStatus.RiskAssessment)?.approveAutomatically()
+        is WorkflowEvent.ManualReviewRequired -> (this as? ApplicationStatus.RiskAssessment)?.requireManualReview(reasons = event.reasons)
+        WorkflowEvent.ManuallyApproved -> (this as? ApplicationStatus.PendingManualReview)?.approve()
+        is WorkflowEvent.ManuallyRejected -> (this as? ApplicationStatus.PendingManualReview)?.reject(reason = event.reason)
+        is WorkflowEvent.ProcessingAbandoned -> (this as? ApplicationStatus.Processing)?.abandon(attempts = event.attempts)
+    }
+}
+
+/**
  * A move from one [ApplicationStatus] to the next, with the [WorkflowEvent] that caused it.
  *
  * Only the workflow in this module can create one, so other modules can save a change
@@ -151,8 +172,10 @@ class StatusChange<out S : ApplicationStatus> internal constructor(
  * One line of an application's audit trail: what happened, when, and the status before and after.
  *
  * [fromStatus] is null only for the first entry, when the application was submitted.
+ * Only the workflow creates entries, so each one is a move the workflow allows.
  */
-data class HistoryEntry(
+@ConsistentCopyVisibility
+data class HistoryEntry internal constructor(
     val timestamp: Instant,
     val fromStatus: ApplicationStatus?,
     val toStatus: ApplicationStatus,
