@@ -64,10 +64,9 @@ wrote 70% or more of the code.
   keeps in `docs/kotlin-conventions.md`, and the
   [pragmatic-clean-architecture-kotlin][skill] skill for the architecture.
 - The developer wrote the domain's foundations (the contracts, the interfaces
-  and the domain models) and the names of the unit tests first, in a
-  test-first way. Claude then wrote the test bodies, completed the classes that
-  were left unfinished, and turned the developer's pseudocode into working
-  code.
+  and the domain models), and agreed the test cases, by their given/when/then
+  names, before Claude wrote them. Claude also completed the classes that were
+  left unfinished, and turned the developer's pseudocode into working code.
 - The developer wrote a good part of the UI layer.
 - The developer made the design decisions, reviewed every change, restyled
   parts of it, and tested each step on real devices.
