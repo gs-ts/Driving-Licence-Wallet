@@ -1,3 +1,67 @@
 <resources>
     <string name="app_name">Driving Licence Wallet</string>
+
+    <!-- The form for a new application. -->
+    <string name="submit_title">Apply for a driving licence</string>
+    <string name="field_first_name">First name</string>
+    <string name="field_last_name">Last name</string>
+    <string name="field_date_of_birth">Date of birth</string>
+    <string name="field_national_id">National ID number</string>
+    <string name="field_email">Email</string>
+    <string name="field_phone_number">Phone number</string>
+    <string name="field_address">Address</string>
+    <string name="field_licence_category">Licence category</string>
+    <string name="field_photo">Face photo</string>
+    <string name="date_of_birth_choose">Choose the date of birth</string>
+    <string name="photo_hint">JPEG photos only</string>
+    <string name="photo_chosen">Photo chosen</string>
+    <string name="photo_choose">Choose photo</string>
+    <string name="photo_change">Change photo</string>
+    <string name="submit">Submit</string>
+
+    <!-- Why the form cannot be submitted yet. Each message is shown under its field. -->
+    <string name="problem_missing_field">Required</string>
+    <string name="problem_name_without_letters">Use at least one letter</string>
+    <string name="problem_invalid_email">Enter an email address, such as name@example.com</string>
+    <string name="problem_missing_photo">Choose a photo</string>
+
+    <!-- Why a submit was refused. -->
+    <string name="submit_another_in_progress">An application is already in progress</string>
+    <string name="submit_photo_not_saved">Couldn\'t read the photo. Choose it again, or pick another one.</string>
+
+    <!-- The licence categories of Directive 2006/126/EC, each with a short description. -->
+    <string name="licence_category_am">AM: mopeds</string>
+    <string name="licence_category_a1">A1: light motorcycles</string>
+    <string name="licence_category_a2">A2: medium motorcycles</string>
+    <string name="licence_category_a">A: motorcycles</string>
+    <string name="licence_category_b1">B1: quadricycles</string>
+    <string name="licence_category_b">B: cars</string>
+    <string name="licence_category_be">BE: cars with a trailer</string>
+    <string name="licence_category_c1">C1: medium lorries</string>
+    <string name="licence_category_c1e">C1E: medium lorries with a trailer</string>
+    <string name="licence_category_c">C: lorries</string>
+    <string name="licence_category_ce">CE: lorries with a trailer</string>
+    <string name="licence_category_d1">D1: minibuses</string>
+    <string name="licence_category_d1e">D1E: minibuses with a trailer</string>
+    <string name="licence_category_d">D: buses</string>
+    <string name="licence_category_de">DE: buses with a trailer</string>
+
+    <!-- The status screen. -->
+    <string name="licence_application_title">Your application</string>
+    <string name="licence_application_id">Application ID</string>
+    <string name="licence_application_status">Status</string>
+    <string name="licence_application_created">Submitted on</string>
+    <string name="licence_application_updated">Last updated</string>
+    <string name="licence_application_not_found">This application cannot be found.</string>
+    <string name="licence_application_new">New application</string>
+
+    <!-- The statuses of the workflow. -->
+    <string name="status_submitted">Submitted</string>
+    <string name="status_validating_data">Validating data</string>
+    <string name="status_checking_photo">Checking photo</string>
+    <string name="status_risk_assessment">Risk assessment</string>
+    <string name="status_pending_manual_review">Pending manual review</string>
+    <string name="status_approved">Approved</string>
+    <string name="status_rejected">Rejected</string>
+    <string name="status_failed">Failed</string>
 </resources>
