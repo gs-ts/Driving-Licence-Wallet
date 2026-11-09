@@ -438,3 +438,9 @@ because migrations run inside the encrypted database.
 The tests use fakes instead of mocks, no Robolectric, and virtual time
 (`runTest`). The device tests run against the real encrypted database and the
 real Keystore.
+
+# Short Demo
+
+https://github.com/user-attachments/assets/6b923060-1f76-4f3f-9bf8-aa9d16deb1c1
+
+
