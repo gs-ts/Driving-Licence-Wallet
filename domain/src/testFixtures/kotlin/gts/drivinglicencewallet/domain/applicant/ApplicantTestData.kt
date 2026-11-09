@@ -1,9 +1,8 @@
 package gts.drivinglicencewallet.domain.applicant
 
 import java.time.LocalDate
-import kotlin.test.assertIs
 
-/** A form that passes every check. Tests change only the fields they are about. */
+/** A form that passes every check. Tests change only the fields they test. */
 val completeForm = ApplicationForm(
     firstName = "Anna",
     lastName = "Svensson",
@@ -16,5 +15,8 @@ val completeForm = ApplicationForm(
     photo = PhotoSource("content://photos/1"),
 )
 
-/** The checked details of [completeForm]. */
-fun completeDetails(): ApplicantDetails = assertIs<FormCheck.Passed>(completeForm.check()).details
+/** The details of [completeForm] after its check has passed. */
+fun completeDetails(): ApplicantDetails = when (val check = completeForm.check()) {
+    is FormCheck.Passed -> check.details
+    is FormCheck.Failed -> error(message = "The complete form failed its check: ${check.problems}")
+}

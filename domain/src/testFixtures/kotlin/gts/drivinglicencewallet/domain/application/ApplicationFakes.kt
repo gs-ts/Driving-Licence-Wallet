@@ -4,6 +4,7 @@ import gts.drivinglicencewallet.domain.applicant.PhotoSource
 import gts.drivinglicencewallet.domain.applicant.completeDetails
 import gts.drivinglicencewallet.domain.workflow.ApplicationStatus
 import gts.drivinglicencewallet.domain.workflow.StatusChange
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -11,8 +12,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.test.assertNotNull
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Instant
 
 /** An in-memory [LicenceApplicationRepository]. */
@@ -21,7 +22,7 @@ class FakeLicenceApplicationRepository : LicenceApplicationRepository {
     private val applications = MutableStateFlow<Map<ApplicationId, LicenceApplication>>(emptyMap())
     private val recordLock = Mutex()
 
-    /** Reads without suspending. */
+    /** Returns the stored application without suspending. */
     operator fun get(id: ApplicationId): LicenceApplication? = applications.value[id]
 
     override suspend fun add(application: LicenceApplication) {
@@ -45,20 +46,28 @@ class FakeLicenceApplicationRepository : LicenceApplicationRepository {
         applications.map { all -> all[id] }.distinctUntilChanged()
 }
 
-/** Names each photo after its application, or fails when [canStore] is false. */
-class FakePhotoStorage(private val canStore: Boolean = true) : PhotoStorage {
+/**
+ * Names each photo after its application, or fails when [canStore] is false.
+ * Storing a photo takes [storeDuration].
+ */
+class FakePhotoStorage(
+    private val canStore: Boolean = true,
+    private val storeDuration: Duration = Duration.ZERO,
+) : PhotoStorage {
 
-    override suspend fun store(source: PhotoSource, id: ApplicationId): PhotoReference? =
-        if (canStore) PhotoReference("photo-${id.value}") else null
+    override suspend fun store(source: PhotoSource, id: ApplicationId): PhotoReference? {
+        delay(duration = storeDuration)
+        return if (canStore) PhotoReference("photo-${id.value}") else null
+    }
 }
 
-/** A clock that always tells [instant]. */
+/** A clock that always returns [instant]. */
 class FixedClock(private val instant: Instant) : Clock {
 
     override fun now(): Instant = instant
 }
 
-/** A just-submitted application with the complete details. */
+/** An application that has just been submitted with the [completeDetails]. */
 fun submittedApplication(id: ApplicationId, timestamp: Instant): LicenceApplication = LicenceApplication.submit(
     id = id,
     details = completeDetails(),
@@ -66,6 +75,6 @@ fun submittedApplication(id: ApplicationId, timestamp: Instant): LicenceApplicat
     timestamp = timestamp,
 )
 
-/** Records [change], or fails the test if it's refused. */
+/** Records [change], or throws an exception if the change is refused. */
 fun LicenceApplication.recordOrFail(change: StatusChange<ApplicationStatus>, timestamp: Instant): LicenceApplication =
-    assertNotNull(record(change, timestamp), "Refused the change from ${change.from} to ${change.to}")
+    checkNotNull(value = record(change = change, timestamp = timestamp)) { "Refused the change from ${change.from} to ${change.to}" }
