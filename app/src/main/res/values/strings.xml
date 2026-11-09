@@ -50,6 +50,7 @@
     <string name="licence_application_title">Your application</string>
     <string name="licence_application_id">Application ID</string>
     <string name="licence_application_status">Status</string>
+    <string name="licence_application_reason">Reason</string>
     <string name="licence_application_created">Submitted on</string>
     <string name="licence_application_updated">Last updated</string>
     <string name="licence_application_not_found">This application cannot be found.</string>
@@ -73,4 +74,38 @@
     <string name="status_approved">Approved</string>
     <string name="status_rejected">Rejected</string>
     <string name="status_failed">Failed</string>
+
+    <!-- The history on the status screen. -->
+    <string name="history_title">History</string>
+    <string name="history_status_change">%1$s → %2$s</string>
+
+    <!-- The events of the workflow, as the history shows them. -->
+    <string name="event_application_submitted">Application submitted</string>
+    <string name="event_processing_started">Processing started</string>
+    <string name="event_data_validation_passed">Data validation passed</string>
+    <string name="event_data_validation_failed">Data validation failed</string>
+    <string name="event_photo_check_passed">Photo check passed</string>
+    <string name="event_photo_check_failed">Photo check failed</string>
+    <string name="event_auto_approved">Approved automatically</string>
+    <string name="event_manual_review_required">Manual review required</string>
+    <string name="event_manually_approved">Approved by a reviewer</string>
+    <string name="event_manually_rejected">Rejected by a reviewer</string>
+    <string name="event_processing_abandoned">Processing gave up</string>
+
+    <!-- The reasons behind an event: why the data or the photo failed, why a review is needed, or why processing gave up. -->
+    <string name="reason_missing_field">%1$s is missing</string>
+    <string name="reason_invalid_email">The email address is not valid</string>
+    <string name="reason_under_18">The applicant is under 18</string>
+    <string name="reason_photo_missing">There is no photo</string>
+    <string name="reason_photo_unsupported_type">The photo is not a JPEG</string>
+    <string name="reason_photo_too_small">The photo file is too small</string>
+    <string name="reason_photo_low_quality">The photo quality is too low</string>
+    <string name="reason_under_21">The applicant is under 21</string>
+    <string name="reason_category_not_b">The category is not B</string>
+    <string name="reason_on_watchlist">The national ID is on the watchlist</string>
+    <string name="reason_review_photo_quality">The photo quality needs a check</string>
+    <plurals name="reason_processing_abandoned">
+        <item quantity="one">The server could not be reached after %d attempt</item>
+        <item quantity="other">The server could not be reached after %d attempts</item>
+    </plurals>
 </resources>

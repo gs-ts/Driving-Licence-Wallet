@@ -36,6 +36,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import gts.drivinglicencewallet.R
+import gts.drivinglicencewallet.domain.applicant.ApplicantField
 import gts.drivinglicencewallet.domain.applicant.ApplicationForm
 import gts.drivinglicencewallet.domain.applicant.FormCheck
 import gts.drivinglicencewallet.domain.applicant.LicenceCategory
@@ -55,20 +57,27 @@ import gts.drivinglicencewallet.domain.application.ApplicationId
 import gts.drivinglicencewallet.domain.application.LicenceApplication
 import gts.drivinglicencewallet.domain.application.PhotoReference
 import gts.drivinglicencewallet.domain.workflow.ApplicationStatus
+import gts.drivinglicencewallet.domain.workflow.DataProblem
+import gts.drivinglicencewallet.domain.workflow.HistoryEntry
+import gts.drivinglicencewallet.domain.workflow.PhotoProblem
 import gts.drivinglicencewallet.domain.workflow.RejectionReason
+import gts.drivinglicencewallet.domain.workflow.ReviewReason
+import gts.drivinglicencewallet.domain.workflow.WorkflowEvent
 import gts.drivinglicencewallet.ui.theme.DrivingLicenceWalletTheme
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
 /**
- * The status of one application. It is updated automatically while the
- * application is processed in the background. Once the application is
- * finished, the applicant can start a new one with [onNewApplication]. Below
- * the details, a simulation section lets a tester act as the issuer.
+ * The status of one application, with its reason and its history. It is
+ * updated automatically while the application is processed in the background.
+ * Once the application is finished, the applicant can start a new one with
+ * [onNewApplication]. Below the details, a simulation section lets a tester act
+ * as the issuer.
  */
 @Composable
 fun LicenceApplicationScreen(
@@ -147,6 +156,17 @@ private fun LicenceApplicationContent(
                         // The status changes while the screen is open, so that a screen reader announces each change.
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
                     )
+                    // The latest change explains the status, for example why the application failed or was rejected.
+                    val reason = application.history.last().event.detailsText()
+
+                    if (reason != null) {
+                        DetailView(
+                            label = R.string.licence_application_reason,
+                            value = reason,
+                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                        )
+                    }
+
                     DetailView(
                         label = R.string.licence_application_created,
                         value = timeFormatter.format(application.createdAt.toJavaInstant())
@@ -170,6 +190,11 @@ private fun LicenceApplicationContent(
                     SimulationView(
                         isServerUnreachable = isServerUnreachable,
                         onAction = onAction
+                    )
+                    HorizontalDivider()
+                    HistoryView(
+                        history = application.history,
+                        timeFormatter = timeFormatter
                     )
                 }
             }
@@ -327,6 +352,162 @@ private fun ReviewRefusal.message(): String = when (this) {
     ReviewRefusal.NotFound -> stringResource(id = R.string.licence_application_not_found)
 }
 
+/**
+ * Every change of the application, the newest first. Each entry shows its
+ * time, the status before and after it, the event and its details.
+ */
+@Composable
+private fun HistoryView(
+    history: List<HistoryEntry>,
+    timeFormatter: DateTimeFormatter,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(space = 16.dp)
+    ) {
+        Text(
+            text = stringResource(id = R.string.history_title),
+            style = MaterialTheme.typography.titleMedium
+        )
+        for (entry in history.asReversed()) {
+            HistoryEntryView(
+                entry = entry,
+                timeFormatter = timeFormatter
+            )
+        }
+    }
+}
+
+/** One change in the history. A screen reader reads it as one item. */
+@Composable
+private fun HistoryEntryView(
+    entry: HistoryEntry,
+    timeFormatter: DateTimeFormatter,
+    modifier: Modifier = Modifier,
+) {
+    val toStatus = stringResource(id = entry.toStatus.labelResource)
+    val fromStatus = entry.fromStatus
+    // The first entry is the submission, which has no status before it.
+    val statusChange = if (fromStatus == null) {
+        toStatus
+    } else {
+        stringResource(
+            id = R.string.history_status_change,
+            stringResource(id = fromStatus.labelResource),
+            toStatus
+        )
+    }
+    val details = entry.event.detailsText()
+
+    Column(modifier = modifier.semantics(mergeDescendants = true) {}) {
+        Text(
+            text = timeFormatter.format(entry.timestamp.toJavaInstant()),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelMedium
+        )
+        Text(text = statusChange, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = stringResource(id = entry.event.labelResource),
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        if (details != null) {
+            Text(
+                text = details,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+/**
+ * The event's details as text, one per line, or null if it has none. The
+ * reviewer's reason is shown as the reviewer wrote it.
+ */
+@Composable
+private fun WorkflowEvent.detailsText(): String? = when (this) {
+    WorkflowEvent.ApplicationSubmitted,
+    WorkflowEvent.ProcessingStarted,
+    WorkflowEvent.DataValidationPassed,
+    WorkflowEvent.PhotoCheckPassed,
+    WorkflowEvent.AutoApproved,
+    WorkflowEvent.ManuallyApproved -> null
+    is WorkflowEvent.DataValidationFailed -> problems
+        .map { problem -> problem.text() }
+        .joinToString(separator = "\n")
+    is WorkflowEvent.PhotoCheckFailed -> problems
+        .map { problem -> stringResource(id = problem.textResource) }
+        .joinToString(separator = "\n")
+    is WorkflowEvent.ManualReviewRequired -> reasons
+        .map { reason -> stringResource(id = reason.textResource) }
+        .joinToString(separator = "\n")
+    is WorkflowEvent.ManuallyRejected -> reason.text
+    is WorkflowEvent.ProcessingAbandoned -> pluralStringResource(
+        id = R.plurals.reason_processing_abandoned,
+        count = attempts,
+        attempts
+    )
+}
+
+@Composable
+private fun DataProblem.text(): String = when (this) {
+    is DataProblem.MissingField -> stringResource(
+        id = R.string.reason_missing_field,
+        stringResource(id = field.labelResource)
+    )
+    DataProblem.InvalidEmail -> stringResource(id = R.string.reason_invalid_email)
+    DataProblem.Under18 -> stringResource(id = R.string.reason_under_18)
+}
+
+@get:StringRes
+private val WorkflowEvent.labelResource: Int
+    get() = when (this) {
+        WorkflowEvent.ApplicationSubmitted -> R.string.event_application_submitted
+        WorkflowEvent.ProcessingStarted -> R.string.event_processing_started
+        WorkflowEvent.DataValidationPassed -> R.string.event_data_validation_passed
+        is WorkflowEvent.DataValidationFailed -> R.string.event_data_validation_failed
+        WorkflowEvent.PhotoCheckPassed -> R.string.event_photo_check_passed
+        is WorkflowEvent.PhotoCheckFailed -> R.string.event_photo_check_failed
+        WorkflowEvent.AutoApproved -> R.string.event_auto_approved
+        is WorkflowEvent.ManualReviewRequired -> R.string.event_manual_review_required
+        WorkflowEvent.ManuallyApproved -> R.string.event_manually_approved
+        is WorkflowEvent.ManuallyRejected -> R.string.event_manually_rejected
+        is WorkflowEvent.ProcessingAbandoned -> R.string.event_processing_abandoned
+    }
+
+@get:StringRes
+private val PhotoProblem.textResource: Int
+    get() = when (this) {
+        PhotoProblem.Missing -> R.string.reason_photo_missing
+        PhotoProblem.UnsupportedType -> R.string.reason_photo_unsupported_type
+        PhotoProblem.TooSmall -> R.string.reason_photo_too_small
+        PhotoProblem.LowQuality -> R.string.reason_photo_low_quality
+    }
+
+@get:StringRes
+private val ReviewReason.textResource: Int
+    get() = when (this) {
+        ReviewReason.Under21 -> R.string.reason_under_21
+        ReviewReason.CategoryNotB -> R.string.reason_category_not_b
+        ReviewReason.OnWatchlist -> R.string.reason_on_watchlist
+        ReviewReason.LowPhotoQuality -> R.string.reason_review_photo_quality
+    }
+
+@get:StringRes
+private val ApplicantField.labelResource: Int
+    get() = when (this) {
+        ApplicantField.FirstName -> R.string.field_first_name
+        ApplicantField.LastName -> R.string.field_last_name
+        ApplicantField.DateOfBirth -> R.string.field_date_of_birth
+        ApplicantField.NationalId -> R.string.field_national_id
+        ApplicantField.Email -> R.string.field_email
+        ApplicantField.PhoneNumber -> R.string.field_phone_number
+        ApplicantField.Address -> R.string.field_address
+        ApplicantField.LicenceCategory -> R.string.field_licence_category
+    }
+
 @get:StringRes
 private val ApplicationStatus.labelResource: Int
     get() = when (this) {
@@ -340,7 +521,10 @@ private val ApplicationStatus.labelResource: Int
         ApplicationStatus.Failed -> R.string.status_failed
     }
 
-/** An application just submitted with the example from the assignment. */
+/**
+ * An application with the example from the assignment, which a reviewer
+ * rejected after a manual review.
+ */
 @Preview
 @Composable
 private fun LicenceApplicationPreview() {
@@ -355,16 +539,28 @@ private fun LicenceApplicationPreview() {
         licenceCategory = LicenceCategory.B,
         photo = PhotoSource(value = "content://preview/photo.jpg")
     )
-    val application = LicenceApplication.submit(
+    val submittedAt = Instant.parse(input = "2026-06-09T10:30:00Z")
+    val submitted = LicenceApplication.submit(
         id = ApplicationId(value = "8c04d6e7-8e51-4b95-84e2-efc8a8ec4a5a"),
         details = (form.check() as FormCheck.Passed).details,
         photo = PhotoReference(value = "preview"),
-        timestamp = Instant.parse(input = "2026-06-09T10:30:00Z")
+        timestamp = submittedAt
     )
+    val changes = listOf(
+        ApplicationStatus.Submitted.startProcessing(),
+        ApplicationStatus.ValidatingData.pass(),
+        ApplicationStatus.CheckingPhoto.pass(),
+        ApplicationStatus.RiskAssessment.requireManualReview(reasons = setOf(ReviewReason.OnWatchlist)),
+        ApplicationStatus.PendingManualReview.reject(reason = checkNotNull(RejectionReason.parse(text = "The face is not clear")))
+    )
+    // Each change is recorded one minute after the one before it.
+    val rejected = changes.foldIndexed(initial = submitted) { index, application, change ->
+        checkNotNull(application.record(change = change, timestamp = submittedAt + (index + 1).minutes))
+    }
 
     DrivingLicenceWalletTheme {
         LicenceApplicationContent(
-            state = LicenceApplicationState.Found(application = application),
+            state = LicenceApplicationState.Found(application = rejected),
             refusal = null,
             isServerUnreachable = false,
             onNewApplication = {},
