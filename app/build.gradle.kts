@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlinx.serialization)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
