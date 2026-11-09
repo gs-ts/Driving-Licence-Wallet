@@ -2,4 +2,11 @@
 <resources>
     <!-- Window/launch theme only. The UI's Material 3 theme lives in ui/theme/Theme.kt (Compose). -->
     <style name="Theme.DrivingLicenceWallet" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- The splash screen shows the launcher icon. The icon's green background keeps its white robot visible on a light background. -->
+    <style name="Theme.DrivingLicenceWallet.Splash" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">#3DDC84</item>
+        <item name="postSplashScreenTheme">@style/Theme.DrivingLicenceWallet</item>
+    </style>
 </resources>

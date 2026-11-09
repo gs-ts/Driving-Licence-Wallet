@@ -16,7 +16,7 @@
             android:name=".MainActivity"
             android:launchMode="singleTop"
             android:exported="true"
-            android:theme="@style/Theme.DrivingLicenceWallet"
+            android:theme="@style/Theme.DrivingLicenceWallet.Splash"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
