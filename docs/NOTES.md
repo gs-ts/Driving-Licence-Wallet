@@ -46,6 +46,9 @@ production, and what was deliberately left out.
   image.
 - **The issuer's settings** (the watchlist, the thresholds and the delay) are
   code, so changing them needs a new build.
+- **The processing date comes from the phone's clock,** and the issuer
+  measures ages on it. A real issuer would use its own clock, because a
+  phone's date can be changed, for example to pass the age check.
 - **WorkManager's attempt count decides when to give up,** and it also counts
   the runs that the system stopped.
 - **The app shows only the latest application.** Older ones stay in the

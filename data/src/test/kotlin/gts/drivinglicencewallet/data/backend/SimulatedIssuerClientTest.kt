@@ -89,12 +89,14 @@ class SimulatedIssuerClientTest {
     }
 
     @Test
-    fun `given a photo that can't be read, when the photo is checked, then the issuer reports it missing`() = runTest {
+    fun `given a photo that can't be read, when a step needs it, then the result is Unavailable`() = runTest {
         val client = client(photos = emptyMap())
 
-        val result = client.checkPhoto(photo = PHOTO)
+        val photoCheck = client.checkPhoto(photo = PHOTO)
+        val riskAssessment = client.assessRisk(details = adultApplyingForB(), photo = PHOTO, processingStartedAt = processingStartedAt)
 
-        assertEquals(expected = BackendResult.Answered(answer = setOf(PhotoProblem.Missing)), actual = result)
+        assertEquals(expected = BackendResult.Unavailable, actual = photoCheck)
+        assertEquals(expected = BackendResult.Unavailable, actual = riskAssessment)
     }
 
     private fun client(photos: Map<PhotoReference, ByteArray>) =

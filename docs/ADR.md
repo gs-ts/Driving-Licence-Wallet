@@ -60,9 +60,11 @@ end the workflow, and the proof must run on the JVM.
 - `record` refuses a change that does not start from the current status, so a
   duplicate or racing run cannot save a step twice; it continues from the
   stored status instead.
-- An unreachable issuer is a temporary failure, and the run asks to be
-  retried. An answer from the issuer, such as failed data, is permanent. On the
-  last attempt, the domain records Failed with `ProcessingAbandoned`.
+- An unreachable issuer, or a stored photo that cannot be read, is a temporary
+  failure, and the run asks to be retried. An answer from the issuer, such as
+  failed data, is permanent. On the last attempt, the domain records Failed
+  with `ProcessingAbandoned`. Any other error, most likely a bug, fails the
+  work, and the next app start schedules the application again.
 - WorkManager does the mechanics: unique work with `KEEP`, a network
   constraint, exponential backoff and the attempt count.
 
@@ -77,15 +79,18 @@ end the workflow, and the proof must run on the JVM.
 
 **Consequences.**
 
-- Every crash point is safe, and the tests crash right before and right after
-  each save.
+- Every crash point is safe for the history: a rerun saves no step twice, and
+  the tests crash right before and right after each save.
 - Duplicate runs are harmless, and giving up is a business event in the
   history, not just a log line.
 - Processing makes three issuer calls instead of one. A real issuer would run
   the workflow on its server, and the app would submit once and follow the
   status.
-- The domain knows the attempt number, and WorkManager also counts the runs
-  that the system stopped.
+- The domain knows the attempt number, but WorkManager also counts the runs
+  that a crash or the system stopped. Repeated crashes during an outage can
+  therefore make processing give up sooner.
+- An unexpected error is not retried before the next app start, even a rare
+  temporary one, such as a full disk.
 
 ## 3. Data protection with SQLCipher, Tink and Keystore keys
 

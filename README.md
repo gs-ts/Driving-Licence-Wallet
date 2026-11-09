@@ -63,7 +63,7 @@ office:
   was refused.
 - **Server unreachable** makes every call to the issuer fail, like a dropped
   connection. Processing retries after about 10, 20, 40 and 80 seconds, then
-  gives up on the 5th attempt with "The server could not be reached after 5
+  gives up on the 5th attempt with "The checks could not be completed after 5
   attempts". Turning the switch off before then lets the next attempt continue.
 
 To see the offline-first behaviour, turn on airplane mode and submit. The
@@ -184,15 +184,19 @@ because:
 
 Failures are of three kinds:
 
-- **Temporary:** the issuer cannot be reached. `SimulatedIssuerClient` turns
-  an `IOException`, and nothing else, into `BackendResult.Unavailable`, and
-  WorkManager retries the run with backoff. On the 5th attempt, the
-  application goes to Failed, with `ProcessingAbandoned` in its history.
+- **Temporary:** the issuer cannot be reached, or the stored photo cannot be
+  read, for example after a brief Keystore error. `SimulatedIssuerClient`
+  turns both into `BackendResult.Unavailable`, and it catches only an
+  `IOException` from the issuer, so a bug is not retried. WorkManager retries
+  the run with backoff. On the 5th attempt, the application goes to Failed,
+  with `ProcessingAbandoned` in its history.
 - **Permanent:** the issuer's answer, such as an applicant under 18 or a photo
   that is too small. The application goes to Failed, with the problems.
-- **A bug:** any other exception. The worker logs its type and ends the work
-  with `failure()`, because a retry would fail the same way. The application
-  keeps its status, and the next app start schedules it again.
+- **Anything else:** any other exception, most likely a bug. The worker logs
+  its type and ends the work with `failure()`, because a retry would most
+  likely fail the same way. The application keeps its status, and the next
+  app start schedules it again. A rare temporary error that ends up here, such
+  as a full disk, also waits for that start.
 
 If the process dies:
 
@@ -339,7 +343,9 @@ no database exists. A production app would show a recovery screen instead of
 crashing, report the error, and offer a reset that downloads the applications
 again from the server. The photo key follows the same rule: if it is lost
 while photos exist, those photos cannot be read, and no new photo can be
-stored until the app's data is cleared.
+stored until the app's data is cleared. An application that is still being
+processed retries the step that reads its photo, and goes to Failed after the
+5th attempt.
 
 To reproduce it on the debug build (`run-as` needs a debuggable app):
 
@@ -383,15 +389,15 @@ saved for that step, and WorkManager retries it with backoff (see C2).
 checks the current status in the same transaction as the write, and the
 replay on every read (see "The workflow" and C1).
 
-**Failures shown versus retried silently.** Temporary issuer failures are
-retried in the background and only logged, and the status stays as it is.
+**Failures shown versus retried silently.** Temporary failures are retried in
+the background and only logged, and the status stays as it is.
 Giving up after 5 attempts and every failed check become Failed, with the
 reason under the status and in the history. A refused review decision shows a
-message, and so does a photo that cannot be read. A bug in a step is the gap:
-the status stays as it is, with no sign on the screen, until the next app
-start schedules the work again. The next step would be a banner on the status
-screen from WorkManager's work info, such as "Waiting for the network" or
-"Retrying".
+message, and so does a photo that cannot be read when the form is submitted.
+An unexpected error in a step, most likely a bug, is the gap: the status stays
+as it is, with no sign on the screen, until the next app start schedules the
+work again. The next step would be a banner on the status screen from
+WorkManager's work info, such as "Waiting for the network" or "Retrying".
 
 **Idempotency key.** The application's ID is a random UUID that the app
 creates before it stores anything (`ApplicationIdGenerator`). The photo file,
@@ -403,10 +409,11 @@ has.
 **Retries and backoff.** The work retries with exponential backoff from 10
 seconds, WorkManager's minimum, and only with a network. The domain decides
 when to give up (`MAX_ATTEMPTS = 5` in `DataModules.kt`). A permanently failed
-submission is Failed, with "The server could not be reached after 5 attempts"
-on the screen and `ProcessingAbandoned(attempts = 5)` in the history. Failed is
-final, and **New application** starts again. WorkManager also counts the runs
-that the system stopped, so a run stopped several times gives up sooner.
+submission is Failed, with "The checks could not be completed after 5
+attempts" on the screen and `ProcessingAbandoned(attempts = 5)` in the history.
+Failed is final, and **New application** starts again. WorkManager also
+counts the runs that the system stopped, so a run stopped several times gives
+up sooner.
 
 **A field added in v2.** The schema is exported to `data/schemas/`. For a new
 column that is nullable or has a default value:
@@ -431,7 +438,7 @@ because migrations run inside the encrypted database.
 |---|---|---|
 | `:domain` | 45, JVM | The workflow, the form check, Submit, Review, resume, and processing with its crash tests |
 | `:simulated-backend` | 15, JVM | The assignment's rules, the processing date, and the delay on virtual time |
-| `:data` | 4, JVM | The issuer's codes, and an unreachable issuer as `Unavailable` |
+| `:data` | 4, JVM | The issuer's codes, and an unreachable issuer or an unreadable photo as `Unavailable` |
 | `:app` | 11, JVM | The two ViewModels, and the date picker's block on future dates |
 | `:data` | 26, device | The encrypted database and the repository (C1), the keys, the photos, and the worker |
 

@@ -72,9 +72,10 @@ internal class WorkManagerProcessingScheduler(private val context: Context) : Pr
  *
  * WorkManager counts the runs from 0, including the ones that the system
  * stopped. A temporary error is retried with backoff, until processing gives
- * up on its last attempt. A bug fails the work, because a retry would fail the
- * same way. The application keeps its status, and the next app start
- * schedules it again.
+ * up on its last attempt. Any other error fails the work, because it is most
+ * likely a bug, which a retry would repeat. The application keeps its status,
+ * and the next app start schedules it again. A rare temporary error that ends
+ * up here, such as a full disk, also waits for that start.
  */
 @HiltWorker
 internal class ProcessApplicationWorker @AssistedInject constructor(
@@ -83,8 +84,9 @@ internal class ProcessApplicationWorker @AssistedInject constructor(
     private val processApplication: ProcessApplicationUseCase,
 ) : CoroutineWorker(context, parameters) {
 
-    // Whatever a bug throws must end the work with failure(). Cancellation
-    // passes through, so that a stopped run stays stopped.
+    // Any unexpected error, most likely a bug, must end the work with
+    // failure(). Cancellation passes through, so that a stopped run stays
+    // stopped.
     @Suppress("TooGenericExceptionCaught")
     override suspend fun doWork(): Result {
         val id = ApplicationId(value = checkNotNull(value = inputData.getString(key = APPLICATION_ID)))

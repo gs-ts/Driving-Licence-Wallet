@@ -105,7 +105,7 @@
     <string name="reason_on_watchlist">The national ID is on the watchlist</string>
     <string name="reason_review_photo_quality">The photo quality needs a check</string>
     <plurals name="reason_processing_abandoned">
-        <item quantity="one">The server could not be reached after %d attempt</item>
-        <item quantity="other">The server could not be reached after %d attempts</item>
+        <item quantity="one">The checks could not be completed after %d attempt</item>
+        <item quantity="other">The checks could not be completed after %d attempts</item>
     </plurals>
 </resources>

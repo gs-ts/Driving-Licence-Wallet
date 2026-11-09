@@ -26,8 +26,11 @@ import kotlin.time.Instant
  * not compile until a new code is mapped.
  *
  * An [IOException], for example while the issuer is unreachable, is temporary
- * and becomes [BackendResult.Unavailable]. Whatever the issuer answers,
- * including a failed check, becomes [BackendResult.Answered].
+ * and becomes [BackendResult.Unavailable]. So does a stored photo that cannot
+ * be read, for example after a brief Keystore error, so that the step is
+ * retried. The applicant did send a photo, so the issuer must not get it as
+ * missing. Whatever the issuer answers, including a failed check, becomes
+ * [BackendResult.Answered].
  */
 internal class SimulatedIssuerClient(
     private val issuer: SimulatedIssuer,
@@ -43,12 +46,8 @@ internal class SimulatedIssuerClient(
             issues.map { issue -> issue.toDataProblem() }.toSet()
         }
 
-    /**
-     * The issuer gets the photo's bytes, or null if the photo cannot be read,
-     * which the issuer reports as missing.
-     */
     override suspend fun checkPhoto(photo: PhotoReference): BackendResult<Set<PhotoProblem>> {
-        val bytes = photoReader.read(photo = photo)
+        val bytes = photoReader.read(photo = photo) ?: return BackendResult.Unavailable
         return answerOrUnavailable {
             val issues = issuer.checkPhoto(photo = bytes)
             issues.map { issue -> issue.toPhotoProblem() }.toSet()
@@ -60,7 +59,7 @@ internal class SimulatedIssuerClient(
         photo: PhotoReference,
         processingStartedAt: Instant,
     ): BackendResult<Set<ReviewReason>> {
-        val bytes = photoReader.read(photo = photo)
+        val bytes = photoReader.read(photo = photo) ?: return BackendResult.Unavailable
         return answerOrUnavailable {
             val flags = issuer.assessRisk(
                 applicant = details.toApplicant(),
