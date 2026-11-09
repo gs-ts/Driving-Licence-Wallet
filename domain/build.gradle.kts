@@ -4,9 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 // keeps the domain free of framework code.
 plugins {
     `java-library`
-    // Shares the fakes and the example data in src/testFixtures with the tests
-    // of the other modules. They do not depend on a test library, so that the
-    // Compose previews can use them as well.
+    // Shares the fakes and the example data in src/testFixtures with the tests of the other modules.
     `java-test-fixtures`
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.detekt)
