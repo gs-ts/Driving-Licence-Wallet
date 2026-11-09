@@ -5,10 +5,11 @@ import kotlin.time.Instant
 /**
  * Where an application is in the onboarding workflow.
  *
- * Each status offers only the moves the workflow allows, so an illegal move doesn't compile:
- * [CheckingPhoto] has no `approve()`, and the final statuses have no moves at all.
- * A move returns a [StatusChange], which is the only way to change a status. Once saved,
- * the change becomes a [HistoryEntry] in the application's audit trail.
+ * Each status offers only the moves that the workflow allows, so an illegal
+ * move does not compile. For example, [CheckingPhoto] has no `approve()`, and
+ * the final statuses have no moves at all. A move returns a [StatusChange],
+ * which is the only way to change a status. Once it is saved, the change
+ * becomes a [HistoryEntry] in the application's audit trail.
  *
  * ```
  * Submitted → ValidatingData → CheckingPhoto → RiskAssessment → Approved
@@ -16,12 +17,12 @@ import kotlin.time.Instant
  *                 Failed           Failed   PendingManualReview → Approved or Rejected
  * ```
  *
- * Any processing step can also end in [Failed] when processing gives up after repeated
- * technical errors.
+ * Any processing step can also end in [Failed] when processing gives up after
+ * repeated technical errors.
  */
 sealed interface ApplicationStatus {
 
-    /** Saved on the device and waiting to be processed. */
+    /** The application is saved on the device and waits to be processed. */
     data object Submitted : ApplicationStatus {
 
         fun startProcessing(): StatusChange<ValidatingData> = StatusChange(
@@ -31,10 +32,13 @@ sealed interface ApplicationStatus {
         )
     }
 
-    /** One of the processing steps is running. Processing can give up during any of them. */
+    /**
+     * One of the processing steps is running. Processing can give up during
+     * any of them.
+     */
     sealed interface Processing : ApplicationStatus {
 
-        /** Gives up after [attempts] tries that failed for technical reasons. */
+        /** Gives up after [attempts] tries, because of technical errors. */
         fun abandon(attempts: Int): StatusChange<Failed> = StatusChange(
             from = this,
             to = Failed,
@@ -42,7 +46,10 @@ sealed interface ApplicationStatus {
         )
     }
 
-    /** Checking the applicant's details: required fields, email and minimum age. */
+    /**
+     * The applicant's details are being checked for the required fields, a
+     * valid email and the minimum age.
+     */
     data object ValidatingData : Processing {
 
         fun pass(): StatusChange<CheckingPhoto> = StatusChange(
@@ -58,7 +65,10 @@ sealed interface ApplicationStatus {
         )
     }
 
-    /** Checking the photo: present, a supported type, large enough and of good enough quality. */
+    /**
+     * The photo is being checked. It must be present, of a supported type,
+     * large enough and of good enough quality.
+     */
     data object CheckingPhoto : Processing {
 
         fun pass(): StatusChange<RiskAssessment> = StatusChange(
@@ -74,7 +84,10 @@ sealed interface ApplicationStatus {
         )
     }
 
-    /** Deciding whether the application can be approved automatically or needs a reviewer. */
+    /**
+     * The application is being assessed, to decide whether it can be approved
+     * automatically or needs a reviewer.
+     */
     data object RiskAssessment : Processing {
 
         fun approveAutomatically(): StatusChange<Approved> = StatusChange(
@@ -90,7 +103,7 @@ sealed interface ApplicationStatus {
         )
     }
 
-    /** Waiting for a reviewer to approve or reject it. */
+    /** The application is waiting for a reviewer to approve or reject it. */
     data object PendingManualReview : ApplicationStatus {
 
         fun approve(): StatusChange<Approved> = StatusChange(
@@ -118,7 +131,10 @@ sealed interface ApplicationStatus {
 
     companion object {
 
-        /** The first change of every application. It's the only change with no previous status. */
+        /**
+         * The first change of every application. It is the only change without
+         * a previous status.
+         */
         fun submit(): StatusChange<Submitted> = StatusChange(
             from = null,
             to = Submitted,
@@ -128,12 +144,13 @@ sealed interface ApplicationStatus {
 }
 
 /**
- * The move from this status that [event] stands for, or null if this status has no such move.
- * Restoring a saved application replays its events through this.
+ * Returns the move from this status that [event] describes, or null if this
+ * status has no such move. Restoring a saved application replays its events
+ * through this function.
  */
 internal fun ApplicationStatus.changeFor(event: WorkflowEvent): StatusChange<ApplicationStatus>? {
     return when (event) {
-        // The submission only starts a history; no status moves to it.
+        // The submission only starts a history, so no status moves to it.
         WorkflowEvent.ApplicationSubmitted -> null
         WorkflowEvent.ProcessingStarted -> (this as? ApplicationStatus.Submitted)?.startProcessing()
         WorkflowEvent.DataValidationPassed -> (this as? ApplicationStatus.ValidatingData)?.pass()
@@ -149,10 +166,12 @@ internal fun ApplicationStatus.changeFor(event: WorkflowEvent): StatusChange<App
 }
 
 /**
- * A move from one [ApplicationStatus] to the next, with the [WorkflowEvent] that caused it.
+ * A move from one [ApplicationStatus] to the next, with the [WorkflowEvent]
+ * that caused it.
  *
- * Only the workflow in this module can create one, so other modules can save a change
- * but can't make up an illegal one. [from] is null only for a new application.
+ * Only the workflow in this module can create one, so other modules can save
+ * a change but cannot make up an illegal one. [from] is null only for a new
+ * application.
  */
 class StatusChange<out S : ApplicationStatus> internal constructor(
     val from: ApplicationStatus?,
@@ -169,10 +188,12 @@ class StatusChange<out S : ApplicationStatus> internal constructor(
 }
 
 /**
- * One line of an application's audit trail: what happened, when, and the status before and after.
+ * One entry in an application's audit trail. It records what happened and
+ * when, with the status before and after.
  *
- * [fromStatus] is null only for the first entry, when the application was submitted.
- * Only the workflow creates entries, so each one is a move the workflow allows.
+ * [fromStatus] is null only for the first entry, when the application was
+ * submitted. Only the workflow creates entries, so each one is a move that the
+ * workflow allows.
  */
 @ConsistentCopyVisibility
 data class HistoryEntry internal constructor(

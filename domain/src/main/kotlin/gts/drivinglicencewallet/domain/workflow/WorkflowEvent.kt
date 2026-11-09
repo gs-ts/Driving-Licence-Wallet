@@ -3,10 +3,12 @@ package gts.drivinglicencewallet.domain.workflow
 import gts.drivinglicencewallet.domain.applicant.ApplicantField
 
 /**
- * What happened to an application. Every [StatusChange] and [HistoryEntry] carries one.
+ * What happened to an application. Every [StatusChange] and [HistoryEntry]
+ * carries one.
  *
- * A failed check or a manual review always has at least one reason, so the history can
- * say why. The app turns the reasons into text when it shows the history.
+ * A failed check or a manual review always has at least one reason, so the
+ * history can say why. The app turns the reasons into text when it shows the
+ * history.
  */
 sealed interface WorkflowEvent {
 
@@ -42,7 +44,10 @@ sealed interface WorkflowEvent {
 
     data class ManuallyRejected(val reason: RejectionReason) : WorkflowEvent
 
-    /** Processing gave up after [attempts] tries that failed for technical reasons, such as an unreachable service. */
+    /**
+     * Processing gave up after [attempts] tries, because of technical errors
+     * such as an unreachable service.
+     */
     data class ProcessingAbandoned(val attempts: Int) : WorkflowEvent {
         init {
             require(value = attempts > 0) { "Processing can only give up after at least one attempt." }
@@ -57,7 +62,7 @@ sealed interface DataProblem {
 
     data object InvalidEmail : DataProblem
 
-    /** Younger than 18 on the day the application was processed. */
+    /** The applicant was younger than 18 on the day processing started. */
     data object Under18 : DataProblem
 }
 
@@ -71,14 +76,17 @@ enum class PhotoProblem {
     /** The file size is below the minimum. */
     TooSmall,
 
-    /** The quality score is below the minimum, so the photo can't be used. */
+    /** The quality score is below the minimum, so the photo cannot be used. */
     LowQuality,
 }
 
-/** Why risk assessment sent the application to a reviewer instead of approving it. */
+/**
+ * Why the risk assessment sent the application to a reviewer instead of
+ * approving it.
+ */
 enum class ReviewReason {
 
-    /** Younger than 21 on the day the application was processed. */
+    /** The applicant was younger than 21 on the day processing started. */
     Under21,
 
     CategoryNotB,
@@ -86,17 +94,23 @@ enum class ReviewReason {
     /** The national ID is on the watchlist. */
     OnWatchlist,
 
-    /** The photo passed the check, but its quality score is below the review threshold. */
+    /**
+     * The photo passed the check, but its quality score is below the review
+     * threshold.
+     */
     LowPhotoQuality,
 }
 
-/** Why a reviewer rejected an application, in the reviewer's own words. Never blank. */
+/**
+ * Why a reviewer rejected an application, in the reviewer's own words. It is
+ * never blank.
+ */
 @JvmInline
 value class RejectionReason private constructor(val text: String) {
 
     companion object {
 
-        /** Returns null when [text] is blank. Removes surrounding spaces. */
+        /** Removes surrounding spaces, and returns null if [text] is blank. */
         fun parse(text: String): RejectionReason? {
             val trimmedText = text.trim()
             return if (trimmedText.isEmpty()) null else RejectionReason(text = trimmedText)

@@ -6,8 +6,9 @@ import gts.drivinglicencewallet.domain.workflow.StatusChange
 import kotlin.time.Clock
 
 /**
- * Lets a reviewer approve or reject an application that is waiting for review. The decision goes into its history.
- * A decision on any other application is refused.
+ * Lets a reviewer approve or reject an application that is waiting for a
+ * review. The decision is saved in the application's history. A decision on
+ * any other application is refused.
  */
 class ManualReviewUseCase(
     private val repository: LicenceApplicationRepository,
@@ -24,7 +25,10 @@ class ManualReviewUseCase(
         change = ApplicationStatus.PendingManualReview.reject(reason = reason)
     )
 
-    /** The repository checks that the application is still pending when it saves, so a double tap can't record two decisions. */
+    /**
+     * The repository checks that the application is still pending when it
+     * saves, so a double tap cannot record two decisions.
+     */
     private suspend fun recordDecision(id: ApplicationId, change: StatusChange<ApplicationStatus>): ReviewResult {
         val result = repository.record(
             id = id,
@@ -44,7 +48,10 @@ sealed interface ReviewResult {
     /** [application] is now approved or rejected. */
     data class Recorded(val application: LicenceApplication) : ReviewResult
 
-    /** Refused: the application is in [status], not waiting for review. */
+    /**
+     * The decision was refused, because the application is in [status] and is
+     * not waiting for a review.
+     */
     data class NotPendingReview(val status: ApplicationStatus) : ReviewResult
 
     data object NotFound : ReviewResult

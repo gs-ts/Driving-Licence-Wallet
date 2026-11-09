@@ -9,8 +9,9 @@ import gts.drivinglicencewallet.domain.workflow.StatusChange
 import kotlin.time.Clock
 
 /**
- * Runs an application's processing steps one at a time, and saves each step before the next.
- * A run after a crash starts from the saved status, so a finished step never runs again.
+ * Runs the processing steps of an application one at a time, and saves the
+ * result of each step before the next one starts. A run after a crash starts
+ * from the saved status, so a step whose result was saved never runs again.
  */
 class ProcessApplicationUseCase(
     private val repository: LicenceApplicationRepository,
@@ -19,16 +20,18 @@ class ProcessApplicationUseCase(
     private val maxAttempts: Int,
 ) {
 
-    /** [attempt] is the number of this run, from 1.
-     * If a step is still unavailable on the last attempt, the application fails.
-     * */
+    /**
+     * [attempt] is the number of this run, starting from 1. If the backend is
+     * still unavailable on the last attempt, the application fails.
+     */
     suspend operator fun invoke(id: ApplicationId, attempt: Int): ProcessingResult {
-        // No such application: there's nothing to process, and a retry wouldn't find it either.
+        // The application does not exist, so there is nothing to process, and
+        // a retry would not find it either.
         val application = repository.find(id = id) ?: return ProcessingResult.Done
         return continueFrom(application = application, attempt = attempt)
     }
 
-    /** Runs the steps that are left, starting from the application's current status. */
+    /** Runs the steps that are left, from the application's current status. */
     private suspend fun continueFrom(application: LicenceApplication, attempt: Int): ProcessingResult {
         return when (application.status) {
             ApplicationStatus.Submitted -> save(
@@ -101,7 +104,11 @@ class ProcessApplicationUseCase(
         }
     }
 
-    /** Saves the change the backend's answer leads to. If the backend was unavailable, retries later or gives up. */
+    /**
+     * Saves the change that the backend's answer leads to. If the backend was
+     * unavailable, the run is retried later, or the application fails after
+     * the last attempt.
+     */
     private suspend fun <T> saveAnswer(
         application: LicenceApplication,
         step: ApplicationStatus.Processing,
@@ -153,7 +160,8 @@ class ProcessApplicationUseCase(
 
         return when (result) {
             is RecordResult.Recorded -> continueFrom(application = result.application, attempt = attempt)
-            // Another run saved this step first, so carry on from where it got to.
+            // Another run has already saved this step, so this run continues
+            // from the current status.
             is RecordResult.Refused -> continueFrom(application = result.current, attempt = attempt)
             RecordResult.NotFound -> ProcessingResult.Done
         }
@@ -162,9 +170,12 @@ class ProcessApplicationUseCase(
 
 sealed interface ProcessingResult {
 
-    /** Nothing left for this run: the application is finished, waiting for a reviewer, or gone. */
+    /**
+     * This run has nothing left to do. The application is finished, waits for
+     * a reviewer, or does not exist.
+     */
     data object Done : ProcessingResult
 
-    /** A step was temporarily unavailable. Run again later. */
+    /** The backend was unavailable, so the run should be repeated later. */
     data object RetryLater : ProcessingResult
 }
