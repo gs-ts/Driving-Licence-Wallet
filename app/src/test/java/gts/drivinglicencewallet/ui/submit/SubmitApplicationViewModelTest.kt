@@ -140,7 +140,7 @@ class SubmitApplicationViewModelTest {
     }
 
     @Test
-    fun `given another application in progress, when Submit is tapped, then the form stays and names that application`() = runTest {
+    fun `given another application in progress, when Submit is tapped, then the form stays and says why`() = runTest {
         val inProgress = submittedApplication(id = ApplicationId(value = "application-0"), timestamp = submittedAt)
         repository.add(application = inProgress)
         val viewModel = viewModel()
@@ -149,7 +149,7 @@ class SubmitApplicationViewModelTest {
         viewModel.onAction(action = SubmitAction.SubmitClicked)
         advanceUntilIdle()
 
-        assertEquals(expected = Submission.Refused.AnotherInProgress(applicationId = inProgress.id), actual = viewModel.submission)
+        assertEquals(expected = Submission.Refused.AnotherInProgress, actual = viewModel.submission)
         assertEquals(expected = completeForm.firstName, actual = viewModel.firstName.text.toString())
         assertEquals(expected = emptyList(), actual = scheduled)
     }

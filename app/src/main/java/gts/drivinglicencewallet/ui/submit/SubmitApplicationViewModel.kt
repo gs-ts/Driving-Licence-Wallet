@@ -132,7 +132,7 @@ class SubmitApplicationViewModel @Inject constructor(
 
     private fun SubmitResult.toSubmission(): Submission = when (this) {
         is SubmitResult.Submitted -> Submission.Succeeded(applicationId = application.id)
-        is SubmitResult.AnotherInProgress -> Submission.Refused.AnotherInProgress(applicationId = application.id)
+        is SubmitResult.AnotherInProgress -> Submission.Refused.AnotherInProgress
         SubmitResult.PhotoNotSaved -> Submission.Refused.PhotoNotSaved
     }
 
@@ -184,10 +184,11 @@ sealed interface Submission {
     sealed interface Refused : Submission {
 
         /**
-         * Only one application can be in progress at a time, and the
-         * application with [applicationId] still is.
+         * Another application is still in progress, and only one can be at a
+         * time. The app does not open the form while one is in progress, so
+         * this is only a safety net.
          */
-        data class AnotherInProgress(val applicationId: ApplicationId) : Refused
+        data object AnotherInProgress : Refused
 
         /** The photo could not be read or saved. */
         data object PhotoNotSaved : Refused
