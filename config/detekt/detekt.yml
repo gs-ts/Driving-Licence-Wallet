@@ -91,6 +91,8 @@ complexity:
     ignoreDefaultParameters: false
     ignoreDataClasses: true
     ignoreAnnotatedParameter: []
+    # A composable takes each value that it shows as a parameter, as Material's own components do.
+    ignoreAnnotated: ['Composable']
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**']
   MethodOverloading:
     active: true
