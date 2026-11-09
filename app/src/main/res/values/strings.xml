@@ -55,6 +55,15 @@
     <string name="licence_application_not_found">This application cannot be found.</string>
     <string name="licence_application_new">New application</string>
 
+    <!-- The simulation section on the status screen, where a tester acts as the issuer. -->
+    <string name="simulation_title">Simulation</string>
+    <string name="simulation_approve">Approve</string>
+    <string name="simulation_reject">Reject</string>
+    <string name="simulation_server_unreachable">Server unreachable</string>
+    <string name="simulation_rejection_title">Reject this application?</string>
+    <string name="simulation_rejection_reason">Reason</string>
+    <string name="simulation_not_pending_review">Only applications pending manual review can be approved or rejected. Current status: %1$s.</string>
+
     <!-- The statuses of the workflow. -->
     <string name="status_submitted">Submitted</string>
     <string name="status_validating_data">Validating data</string>

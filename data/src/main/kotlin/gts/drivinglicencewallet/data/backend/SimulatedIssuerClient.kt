@@ -84,6 +84,17 @@ internal class SimulatedIssuerClient(
 }
 
 /**
+ * Makes the simulated issuer unreachable, so that the app can show how
+ * processing retries. While [isUnreachable] is true, every call to the issuer
+ * fails, like a dropped connection. It is kept in memory only, so it is off
+ * again after the app's process ends.
+ */
+interface SimulatedIssuerSwitch {
+
+    var isUnreachable: Boolean
+}
+
+/**
  * A category's code is its name, such as "B", because the domain names the
  * categories as the EU directive does.
  */

@@ -7,6 +7,7 @@ import dagger.hilt.components.SingletonComponent
 import gts.drivinglicencewallet.domain.application.ApplicationId
 import gts.drivinglicencewallet.domain.application.ApplicationIdGenerator
 import gts.drivinglicencewallet.domain.application.LicenceApplicationRepository
+import gts.drivinglicencewallet.domain.application.ManualReviewUseCase
 import gts.drivinglicencewallet.domain.application.PhotoStorage
 import gts.drivinglicencewallet.domain.application.ProcessingScheduler
 import gts.drivinglicencewallet.domain.application.SubmitApplicationUseCase
@@ -75,4 +76,8 @@ internal object UseCaseModule {
         idGenerator = idGenerator,
         clock = clock
     )
+
+    @Provides
+    fun provideManualReviewUseCase(repository: LicenceApplicationRepository, clock: Clock): ManualReviewUseCase =
+        ManualReviewUseCase(repository = repository, clock = clock)
 }

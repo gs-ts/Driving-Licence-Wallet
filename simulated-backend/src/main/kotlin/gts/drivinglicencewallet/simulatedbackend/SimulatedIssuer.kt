@@ -16,7 +16,7 @@ import kotlin.time.toJavaInstant
  */
 class SimulatedIssuer(private val config: IssuerConfig) {
 
-    /** While true, every call fails with an [IOException], like a dropped connection. For the debug menu's network switch. */
+    /** While true, every call fails with an [IOException], like a dropped connection. For the network switch on the status screen. */
     @Volatile
     var isUnreachable: Boolean = false
 

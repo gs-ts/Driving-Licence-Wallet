@@ -7,6 +7,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import gts.drivinglicencewallet.data.backend.SimulatedIssuerClient
+import gts.drivinglicencewallet.data.backend.SimulatedIssuerSwitch
 import gts.drivinglicencewallet.data.database.LicenceDatabase
 import gts.drivinglicencewallet.data.database.RoomLicenceApplicationRepository
 import gts.drivinglicencewallet.data.database.encryption.DatabaseKey
@@ -97,6 +98,11 @@ internal object ProcessingModule {
     @Provides
     @Singleton
     fun provideSimulatedIssuer(): SimulatedIssuer = SimulatedIssuer(config = IssuerConfig())
+
+    @Provides
+    fun provideSimulatedIssuerSwitch(issuer: SimulatedIssuer): SimulatedIssuerSwitch = object : SimulatedIssuerSwitch {
+        override var isUnreachable: Boolean by issuer::isUnreachable
+    }
 
     @Provides
     fun provideIssuerBackend(issuer: SimulatedIssuer, photoStorage: EncryptedPhotoStorage): IssuerBackend =
