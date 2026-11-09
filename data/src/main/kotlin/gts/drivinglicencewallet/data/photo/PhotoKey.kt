@@ -13,12 +13,14 @@ import java.io.File
 import java.io.IOException
 
 /**
- * The key that encrypts the photos: a Tink keyset, saved in [keysetFile] encrypted by a key in the Android
- * Keystore ([keystoreAlias]). The Keystore key can't be copied off the device, so a copy of the app's files
- * can't decrypt the photos.
+ * The key that encrypts the photos. It is a Tink keyset, which is saved in
+ * [keysetFile], encrypted by a key in the Android Keystore ([keystoreAlias]).
+ * The Keystore key cannot be copied off the device, so a copy of the app's
+ * files cannot decrypt the photos.
  *
- * A new key is made only while [photosDirectory] holds no photos. Once it does, a key that can't be read is
- * an error, and nothing is deleted: a new key would lock the saved photos out for good.
+ * A new key is made only while [photosDirectory] holds no photos. Once it does,
+ * a key that cannot be read is an error, and nothing is deleted, because a new
+ * key would lock the saved photos out for good.
  */
 internal class PhotoKey(
     private val keysetFile: File,
@@ -27,16 +29,20 @@ internal class PhotoKey(
 ) {
 
     /**
-     * Reads the key, or makes one while there are no photos, ready to encrypt and decrypt them.
-     * Throws a `GeneralSecurityException` or an [IOException] if it can't. It uses the Keystore and the disk,
-     * so call it off the main thread.
+     * Reads the key, or makes one while there are no photos, ready to encrypt
+     * and decrypt them. Throws a `GeneralSecurityException` or an [IOException]
+     * if it cannot. It uses the Keystore and the disk, so call it off the main
+     * thread.
      */
     fun get(): StreamingAead {
         val keyset = if (hasPhotos()) read() else create()
         return keyset.getPrimitive(CONFIGURATION, StreamingAead::class.java)
     }
 
-    /** A directory that exists but can't be listed may hold photos, so it counts as having them. */
+    /**
+     * A directory that exists but cannot be listed may hold photos, so it
+     * counts as having them.
+     */
     private fun hasPhotos(): Boolean = photosDirectory.list()?.isNotEmpty() ?: photosDirectory.exists()
 
     private fun read(): KeysetHandle = TinkProtoKeysetFormat.parseEncryptedKeyset(
@@ -55,17 +61,24 @@ internal class PhotoKey(
             ASSOCIATED_DATA,
             CONFIGURATION
         )
-        // AtomicFile writes the whole file or nothing, and syncs it to disk, so it's saved before any photo needs it.
+        // AtomicFile writes the whole file or nothing, and syncs it to disk, so
+        // the keyset is saved before any photo needs it.
         AtomicFile(keysetFile).writeBytes(array = encryptedKeyset)
         return keyset
     }
 
     private companion object {
 
-        /** Tink's streaming AEAD algorithms, passed to each call instead of registering them in Tink's global registry. */
+        /**
+         * Tink's streaming AEAD algorithms. They are passed to each call
+         * instead of being registered in Tink's global registry.
+         */
         val CONFIGURATION: Configuration = StreamingAeadConfig2026.get()
 
-        /** Ties the encrypted keyset to this use, so it can't pass for another secret. */
+        /**
+         * Ties the encrypted keyset to this use, so that it cannot be decrypted
+         * as a different secret.
+         */
         val ASSOCIATED_DATA = "licence photo keyset".encodeToByteArray()
     }
 }

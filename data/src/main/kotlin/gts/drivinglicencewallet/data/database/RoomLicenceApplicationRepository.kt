@@ -19,8 +19,9 @@ import kotlin.time.Instant
 /**
  * Keeps the applications in the encrypted database.
  *
- * [record] checks the status and saves the change in one write transaction, so two runs can't both
- * make the same move. An application that can't be read back is left out and logged by its ID only.
+ * [record] checks the status and saves the change in one write transaction, so
+ * two runs cannot both make the same move. An application whose saved data
+ * cannot be read is left out, and only its ID is logged.
  */
 internal class RoomLicenceApplicationRepository(private val database: LicenceDatabase) : LicenceApplicationRepository {
 
@@ -40,7 +41,7 @@ internal class RoomLicenceApplicationRepository(private val database: LicenceDat
             .mapNotNull { saved -> saved.readOrSkip() }
             .firstOrNull { application -> application.status !is ApplicationStatus.Final }
 
-    /** Returns the application as it was saved, read back in the same transaction. */
+    /** Returns the saved application, read back in the same transaction. */
     override suspend fun record(
         id: ApplicationId,
         change: StatusChange<ApplicationStatus>,
@@ -64,10 +65,15 @@ internal class RoomLicenceApplicationRepository(private val database: LicenceDat
             .map { saved -> saved?.readOrSkip() }
             .distinctUntilChanged()
 
-    /** The application, or null if its saved data can't be read. Logs only the ID; the rest is personal data. */
+    /**
+     * Returns the application, or null if its saved data cannot be read. Only
+     * the ID is logged, because the rest is personal data.
+     */
     private fun LicenceApplicationWithHistory.readOrSkip(): LicenceApplication? {
         val restored = toApplicationOrNull()
-        if (restored == null) Timber.w("Skipped application %s: its saved data can't be read.", application.id)
+        if (restored == null) {
+            Timber.w("Skipped application %s: its saved data can't be read.", application.id)
+        }
         return restored
     }
 }

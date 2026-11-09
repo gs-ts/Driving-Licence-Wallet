@@ -24,12 +24,13 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Runs each application's processing as unique work, so scheduling it again while it's queued or running does nothing
- * ([ExistingWorkPolicy.KEEP]). REPLACE would cancel the running work, which only stops at its next suspension point,
- * so two runs could overlap.
+ * Runs each application's processing as unique work, so scheduling it again
+ * while it is queued or running does nothing ([ExistingWorkPolicy.KEEP]).
+ * REPLACE would cancel the running work, which stops only at its next
+ * suspension point, so two runs could overlap.
  *
- * The work waits for a network, as it would with a real issuer, and retries with exponential backoff from 10 seconds,
- * WorkManager's minimum.
+ * The work waits for a network, as it would with a real issuer, and retries
+ * with exponential backoff from 10 seconds, which is WorkManager's minimum.
  */
 internal class WorkManagerProcessingScheduler(private val context: Context) : ProcessingScheduler {
 
@@ -48,8 +49,9 @@ internal class WorkManagerProcessingScheduler(private val context: Context) : Pr
             )
             .build()
 
-        // Looked up on each call, not when created: Hilt can create this while it injects the Application, before the
-        // worker factory that WorkManager's configuration needs.
+        // WorkManager is looked up on each call, because Hilt can create this
+        // class while it injects the Application, before the worker factory
+        // that WorkManager's configuration needs is ready.
         WorkManager.getInstance(context = context).enqueueUniqueWork(
             uniqueWorkName = uniqueWorkName(id = id),
             existingWorkPolicy = ExistingWorkPolicy.KEEP,
@@ -64,12 +66,15 @@ internal class WorkManagerProcessingScheduler(private val context: Context) : Pr
 }
 
 /**
- * Runs one attempt of an application's processing. Its only input is the application's ID: WorkManager's database
- * isn't encrypted, so the applicant's details stay in ours.
+ * Runs one attempt of an application's processing. Its only input is the
+ * application's ID. WorkManager's database is not encrypted, so the
+ * applicant's details stay in ours.
  *
- * WorkManager counts the runs from 0, including the ones the system stopped. A temporary error retries with
- * backoff, until the engine gives up on its last attempt. A bug fails the work, because a retry would fail the
- * same way: the application keeps its status, and the next app start schedules it again.
+ * WorkManager counts the runs from 0, including the ones that the system
+ * stopped. A temporary error is retried with backoff, until processing gives
+ * up on its last attempt. A bug fails the work, because a retry would fail the
+ * same way. The application keeps its status, and the next app start
+ * schedules it again.
  */
 @HiltWorker
 internal class ProcessApplicationWorker @AssistedInject constructor(
@@ -78,7 +83,8 @@ internal class ProcessApplicationWorker @AssistedInject constructor(
     private val processApplication: ProcessApplicationUseCase,
 ) : CoroutineWorker(context, parameters) {
 
-    // Whatever a bug throws must end the work with failure(). Cancellation passes through, so a stopped run stays stopped.
+    // Whatever a bug throws must end the work with failure(). Cancellation
+    // passes through, so that a stopped run stays stopped.
     @Suppress("TooGenericExceptionCaught")
     override suspend fun doWork(): Result {
         val id = ApplicationId(value = checkNotNull(value = inputData.getString(key = APPLICATION_ID)))
@@ -98,7 +104,8 @@ internal class ProcessApplicationWorker @AssistedInject constructor(
         } catch (exception: CancellationException) {
             throw exception
         } catch (exception: Exception) {
-            // Only the error's type: its message could hold the applicant's data.
+            // Only the error's type is logged, because its message could hold
+            // the applicant's data.
             Timber.e(
                 "Application %s, attempt %d: stopped by %s",
                 id.value,

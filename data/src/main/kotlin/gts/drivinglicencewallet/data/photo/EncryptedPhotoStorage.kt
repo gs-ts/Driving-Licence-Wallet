@@ -19,19 +19,21 @@ import java.io.IOException
 import java.security.GeneralSecurityException
 import kotlin.time.Instant
 
-/** Reads a stored photo, such as for the issuer's photo check. */
+/** Reads a stored photo for the issuer's checks. */
 internal interface PhotoReader {
 
-    /** The photo's bytes, or null if its file is gone or can't be decrypted. */
+    /** The photo's bytes, or null if its file cannot be read or decrypted. */
     suspend fun read(photo: PhotoReference): ByteArray?
 }
 
 /**
- * Keeps each application's photo in [directory], encrypted with Tink's streaming AEAD and [key].
+ * Keeps each application's photo in [directory], encrypted with Tink's
+ * streaming AEAD and [key].
  *
- * Each photo is one file, named after its application's ID, and that name is its [PhotoReference].
- * The name is also the associated data, so a file renamed to another application's name can't be decrypted.
- * The logs name the application only: the photo's URI stays out of them.
+ * Each photo is one file, named after its application's ID, and that name is
+ * its [PhotoReference]. The name is also the associated data, so a file that
+ * is renamed to another application's name cannot be decrypted. The logs name
+ * only the application, never the photo's URI.
  */
 internal class EncryptedPhotoStorage(
     private val contentResolver: ContentResolver,
@@ -40,10 +42,16 @@ internal class EncryptedPhotoStorage(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : PhotoStorage, PhotoReader {
 
-    /** Read or made on first use, then kept, so two photos stored at once can't each make a new key. */
+    /**
+     * The key is read or made on first use and then kept, so that two photos
+     * stored at the same time cannot each make a new key.
+     */
     private val streamingAead: StreamingAead by lazy { key.get() }
 
-    /** Encrypts the photo while it copies it, 1 MB at a time, so a large photo is never all in memory. */
+    /**
+     * Encrypts the photo while it copies it, 1 MB at a time, so that a large
+     * photo is never fully in memory.
+     */
     override suspend fun store(source: PhotoSource, id: ApplicationId): PhotoReference? = withContext(context = ioDispatcher) {
         val file = File(directory, id.value)
         try {
@@ -54,7 +62,7 @@ internal class EncryptedPhotoStorage(
         } catch (exception: GeneralSecurityException) {
             discard(file = file, error = exception)
         } catch (exception: SecurityException) {
-            // The app may no longer read the URI, such as after a restart.
+            // The app may no longer be allowed to read the URI, for example after a restart.
             discard(file = file, error = exception)
         }
     }
@@ -70,9 +78,11 @@ internal class EncryptedPhotoStorage(
     }
 
     /**
-     * Deletes the photos not in [inUse], such as one stored just before a crash, before its application was saved.
-     * Only photos written before [writtenBefore] go. Pass the time the app started: a newer photo may belong to a
-     * submit that hasn't saved its application yet.
+     * Deletes the photos that are not in [inUse], such as one that was stored
+     * just before a crash, before its application was saved. Only the photos
+     * written before [writtenBefore] are deleted. Pass the time when the app
+     * started, because a newer photo may belong to a submit that has not yet
+     * saved its application.
      */
     suspend fun deleteUnreferenced(inUse: Set<PhotoReference>, writtenBefore: Instant) {
         withContext(context = ioDispatcher) {
@@ -89,12 +99,14 @@ internal class EncryptedPhotoStorage(
     }
 
     /**
-     * Opens the photo and gets the key before it creates the file. A photo that can't be opened then leaves
-     * nothing behind, and the key, which checks whether any photo exists, doesn't count this one.
+     * Opens the photo and gets the key before it creates the file. A photo that
+     * cannot be opened then leaves nothing behind, and the key, which checks
+     * whether any photo exists, does not count this one.
      */
     private fun encrypt(source: PhotoSource, file: File) {
         contentResolver.openInputStream(source.value.toUri())?.use { input ->
-            // Before the file exists, so the key doesn't count it as a photo.
+            // The key is read before the file exists, so that it does not
+            // count this file as a photo.
             val encrypter = streamingAead
             directory.mkdirs()
             FileOutputStream(file).use { output ->
@@ -117,7 +129,10 @@ internal class EncryptedPhotoStorage(
         }
     }
 
-    /** Deletes what was written, and returns null. Logs only the error's type: its message can hold the photo's URI. */
+    /**
+     * Deletes what was written, and returns null. Only the error's type is
+     * logged, because its message can hold the photo's URI.
+     */
     private fun discard(file: File, error: Exception): PhotoReference? {
         file.delete()
         Timber.w(

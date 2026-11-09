@@ -19,12 +19,15 @@ import java.io.IOException
 import kotlin.time.Instant
 
 /**
- * The client of the issuer simulated in the app, which the domain uses as its [IssuerBackend]. A real app would
- * have an HTTP client here. It translates between the issuer's types and the domain's, so neither depends on
- * the other. Each issuer code maps in a `when` without `else`, so a new code doesn't compile until it's mapped.
+ * The client for the issuer that the app simulates, which the domain uses as
+ * its [IssuerBackend]. A real app would have an HTTP client here. It translates
+ * between the issuer's types and the domain's, so neither depends on the
+ * other. Each issuer code is mapped in a `when` without `else`, so the app does
+ * not compile until a new code is mapped.
  *
- * An [IOException], such as while the issuer is unreachable, is temporary: [BackendResult.Unavailable].
- * Whatever the issuer answers, including a failed check, is [BackendResult.Answered].
+ * An [IOException], for example while the issuer is unreachable, is temporary
+ * and becomes [BackendResult.Unavailable]. Whatever the issuer answers,
+ * including a failed check, becomes [BackendResult.Answered].
  */
 internal class SimulatedIssuerClient(
     private val issuer: SimulatedIssuer,
@@ -40,7 +43,10 @@ internal class SimulatedIssuerClient(
             issues.map { issue -> issue.toDataProblem() }.toSet()
         }
 
-    /** The issuer gets the photo's bytes, or null if the photo can't be read, which it reports as missing. */
+    /**
+     * The issuer gets the photo's bytes, or null if the photo cannot be read,
+     * which the issuer reports as missing.
+     */
     override suspend fun checkPhoto(photo: PhotoReference): BackendResult<Set<PhotoProblem>> {
         val bytes = photoReader.read(photo = photo)
         return answerOrUnavailable {
@@ -65,7 +71,10 @@ internal class SimulatedIssuerClient(
         }
     }
 
-    /** Catches only an IOException: a bug still fails loudly, and cancellation still stops the call. Logs only the error's type. */
+    /**
+     * Catches only an [IOException], so that a bug still fails loudly and
+     * cancellation still stops the call. Only the error's type is logged.
+     */
     private inline fun <T> answerOrUnavailable(call: () -> T): BackendResult<T> = try {
         BackendResult.Answered(answer = call())
     } catch (exception: IOException) {
@@ -74,7 +83,10 @@ internal class SimulatedIssuerClient(
     }
 }
 
-/** A category's code is its name, such as "B": the domain names the categories as the EU directive does. */
+/**
+ * A category's code is its name, such as "B", because the domain names the
+ * categories as the EU directive does.
+ */
 private fun ApplicantDetails.toApplicant(): Applicant = Applicant(
     firstName = firstName.text,
     lastName = lastName.text,
