@@ -15,6 +15,9 @@ interface LicenceApplicationRepository {
     /** The application that is not finished yet, if there is one. */
     suspend fun findInProgress(): LicenceApplication?
 
+    /** The application that was submitted last, if there is one. */
+    suspend fun findLatest(): LicenceApplication?
+
     /**
      * Saves [change] only if the application is still in the change's starting
      * status ([StatusChange.from]). For example, an approval starts from

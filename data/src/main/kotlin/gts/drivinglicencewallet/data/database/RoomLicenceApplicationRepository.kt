@@ -41,6 +41,11 @@ internal class RoomLicenceApplicationRepository(private val database: LicenceDat
             .mapNotNull { saved -> saved.readOrSkip() }
             .firstOrNull { application -> application.status !is ApplicationStatus.Final }
 
+    override suspend fun findLatest(): LicenceApplication? =
+        dao.findAll()
+            .mapNotNull { saved -> saved.readOrSkip() }
+            .maxByOrNull { application -> application.createdAt }
+
     /** Returns the saved application, read back in the same transaction. */
     override suspend fun record(
         id: ApplicationId,

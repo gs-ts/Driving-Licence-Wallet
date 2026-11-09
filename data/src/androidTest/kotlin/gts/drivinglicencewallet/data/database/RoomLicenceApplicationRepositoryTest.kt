@@ -6,6 +6,8 @@ import gts.drivinglicencewallet.data.database.entities.EventCode
 import gts.drivinglicencewallet.data.database.entities.HistoryEventEntity
 import gts.drivinglicencewallet.data.database.entities.toEntity
 import gts.drivinglicencewallet.domain.application.ApplicationId
+import gts.drivinglicencewallet.domain.application.LicenceApplication
+import gts.drivinglicencewallet.domain.application.PhotoReference
 import gts.drivinglicencewallet.domain.application.RecordResult
 import gts.drivinglicencewallet.domain.workflow.ApplicationStatus
 import gts.drivinglicencewallet.domain.workflow.PhotoProblem
@@ -167,6 +169,27 @@ class RoomLicenceApplicationRepositoryTest {
         repository.add(application = inProgress)
 
         assertEquals(expected = inProgress, actual = repository.findInProgress())
+    }
+
+    @Test
+    fun givenAFinishedApplicationAndANewerOne_whenTheLatestIsLookedUp_thenItIsTheNewerOne() = runTest {
+        val finished = submittedApplication(id = "finished").recordAll(
+            ApplicationStatus.Submitted.startProcessing(),
+            ApplicationStatus.ValidatingData.pass(),
+            ApplicationStatus.CheckingPhoto.pass(),
+            ApplicationStatus.RiskAssessment.approveAutomatically(),
+        )
+        val newer = LicenceApplication.submit(
+            id = ApplicationId(value = "newer"),
+            details = applicantDetails(),
+            photo = PhotoReference(value = "photo-newer"),
+            timestamp = finished.updatedAt + 1.minutes,
+        )
+        // The newer one is added first, so that the order of the rows cannot decide the result.
+        repository.add(application = newer)
+        repository.add(application = finished)
+
+        assertEquals(expected = newer, actual = repository.findLatest())
     }
 
     @Test

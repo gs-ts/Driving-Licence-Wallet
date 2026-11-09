@@ -34,6 +34,8 @@ class FakeLicenceApplicationRepository : LicenceApplicationRepository {
     override suspend fun findInProgress(): LicenceApplication? =
         applications.value.values.firstOrNull { application -> application.status !is ApplicationStatus.Final }
 
+    override suspend fun findLatest(): LicenceApplication? = applications.value.values.maxByOrNull { application -> application.createdAt }
+
     override suspend fun record(id: ApplicationId, change: StatusChange<ApplicationStatus>, timestamp: Instant): RecordResult =
         recordLock.withLock {
             val stored = applications.value[id] ?: return@withLock RecordResult.NotFound
