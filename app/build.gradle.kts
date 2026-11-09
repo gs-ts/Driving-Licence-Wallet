@@ -41,7 +41,8 @@ android {
         compose = true
         aidl = false
         resValues = false
-        // For BuildConfig.DEBUG: debug logs only. It's a constant, so R8 removes the debug code from release.
+        // For BuildConfig.DEBUG, so that only debug builds write logs. It is a
+        // constant, so R8 removes the debug code from the release build.
         buildConfig = true
     }
 }
@@ -83,6 +84,7 @@ dependencies {
     detektPlugins(libs.detekt.rules.ktlint.wrapper)
     detektPlugins(libs.detekt.compose.rules)
 
+    testImplementation(testFixtures(project(":domain")))
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlin.coroutines.test)
